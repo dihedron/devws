@@ -12,5 +12,7 @@ type Run struct {
 
 func (cmd *Run) Execute(args []string) error {
 	slog.Debug("running run command")
+
+	slog.Debug("run command completed")
 	return nil
 }
