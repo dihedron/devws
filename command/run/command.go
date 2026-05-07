@@ -3,7 +3,7 @@ package run
 import (
 	"log/slog"
 
-	"github.com/dihedron/slumberd/command/base"
+	"github.com/dihedron/devws/command/base"
 )
 
 type Run struct {

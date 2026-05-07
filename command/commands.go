@@ -1,8 +1,8 @@
 package command
 
 import (
-	"github.com/dihedron/slumberd/command/power"
-	"github.com/dihedron/slumberd/command/version"
+	"github.com/dihedron/devws/command/power"
+	"github.com/dihedron/devws/command/version"
 )
 
 // Commands is the set of root command groups.
