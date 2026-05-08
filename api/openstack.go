@@ -31,7 +31,7 @@ func NewOpenStackClient() (*OpenStackClient, error) {
 	}
 
 	client, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
-		Region: "RegionOne", // Should probably be configurable
+		Region: "RegionOne", // TODO: should probably be configurable
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compute client: %w", err)
