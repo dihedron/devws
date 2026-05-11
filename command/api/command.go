@@ -15,7 +15,7 @@ import (
 type API struct {
 	base.Command
 
-	Address string `short:"a" long:"address" description:"Address to bind the API to." default:":8080"`
+	Address string `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
 }
 
 type Link struct {
@@ -33,8 +33,8 @@ func (l Link) MarshalJSON() ([]byte, error) {
 type VM struct {
 	ID     string `json:"id"`
 	Status string `json:"status"`
-	Link   *Link  `json:"link,omitempty"`
 	Links  *struct {
+		Self     *Link `json:"self,omitempty"`
 		Stop     *Link `json:"stop,omitempty"`
 		Start    *Link `json:"start,omitempty"`
 		Restart  *Link `json:"restart,omitempty"`
@@ -49,8 +49,9 @@ func NewVM(base string, id string, status string) *VM {
 	return &VM{
 		ID:     id,
 		Status: status,
-		Link:   &Link{Relation: "self", Href: base + "/" + id},
+		//Link:   &Link{Relation: "self", Href: base + "/" + id},
 		Links: &struct {
+			Self     *Link `json:"self,omitempty"`
 			Stop     *Link `json:"stop,omitempty"`
 			Start    *Link `json:"start,omitempty"`
 			Restart  *Link `json:"restart,omitempty"`
@@ -59,6 +60,7 @@ func NewVM(base string, id string, status string) *VM {
 			Shelve   *Link `json:"shelve,omitempty"`
 			Unshelve *Link `json:"unshelve,omitempty"`
 		}{
+			Self:     &Link{Relation: "self", Href: base + "/" + id},
 			Stop:     &Link{Relation: "stop", Href: base + "/" + id + "/stop"},
 			Start:    &Link{Relation: "start", Href: base + "/" + id + "/start"},
 			Restart:  &Link{Relation: "restart", Href: base + "/" + id + "/restart"},
@@ -82,16 +84,13 @@ func (cmd *API) Execute(args []string) error {
 	// rand.Read(authenticationKey)
 	// encryptionKey := make([]byte, 32)
 	// rand.Read(encryptionKey)
+	// store := cookie.NewStore(authenticationKey, encryptionKey)
 
-	// initialize the session store (using a cookie for simplicity here)
-	// in production, use a strong, environment-variable-injected secret key.
-	//store := cookie.NewStore(authenticationKey, encryptionKey)
-
-	router.Use(Logger())
-	router.Use(gin.Recovery())
-
-	// register the session middleware FIRST so subsequent middlewares can use it
-	router.Use(sessions.Sessions("api_session", cookie.NewStore([]byte("super-secret-key"))))
+	router.Use(
+		Logger(),
+		gin.Recovery(),
+		sessions.Sessions("api_session", cookie.NewStore([]byte("super-secret-key"))),
+	)
 
 	// define an authenticator
 	authenticator := &StaticAuthenticator{
@@ -100,25 +99,60 @@ func (cmd *API) Execute(args []string) error {
 			"developer": "QWERTY",
 		},
 	}
-	// group routes that require authentication
-	router.Use(SessionAuthMiddleware("Developer Workstation", authenticator)) // Apply our custom middleware
 
-	group := router.Group("/api/v1/vm")
+	// the /login and /logout routes do not need authentication
+	unauthenticated := router.Group("")
 	{
-		// group.GET("/login", func(c *gin.Context) {
-		// 	session := sessions.Default(c)
-		// 	session.Set("user", "admin")
-		// 	session.Save()
-		// 	c.JSON(http.StatusOK, gin.H{"message": "Logged in successfully"})
-		// })
-		group.GET("/logout", func(c *gin.Context) {
+		unauthenticated.StaticFile("/favicon.ico", "./command/api/assets/favicon.ico")
+		unauthenticated.StaticFile("/login", "./command/api/assets/login.html")
+		// unauthenticated.StaticFile("/style.css", "./command/api/assets/style.css")
+		// unauthenticated.StaticFile("/script.js", "./command/api/assets/script.js")
+		unauthenticated.GET("/", func(c *gin.Context) {
 			session := sessions.Default(c)
-			session.Clear()
-			session.Save()
-			c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+			if username := session.Get("username"); username != nil {
+				slog.Debug("user already logged in, redirecting to main page...")
+				c.Redirect(http.StatusFound, "/api/v1/vm/")
+			} else {
+				slog.Debug("user not logged in yet, redirecting to login page")
+				c.Redirect(http.StatusFound, "/login")
+			}
 		})
+		unauthenticated.POST("/login", func(c *gin.Context) {
+			username := c.PostForm("username")
+			password := c.PostForm("password")
+			slog.Debug("logging out user first...", "username", username)
+			session := sessions.Default(c)
+			if u := session.Get("username"); u == username {
+				slog.Debug("user already logged in, redirectong to main page")
+				c.Redirect(http.StatusFound, "/api/v1/vm")
+			} else {
+				slog.Debug("logging in user...", "username", username, "password", password)
+				if authenticator.Authenticate(c, username, password) {
+					slog.Info("user successfully logged in", "username", username)
+					session.Set("username", username)
+					session.Save()
+					c.Redirect(http.StatusFound, "/api/v1/vm")
+					return
+				}
+				c.Redirect(http.StatusFound, "/login")
+			}
 
-		group.GET("/", func(c *gin.Context) {
+		})
+		unauthenticated.GET("/logout", func(c *gin.Context) {
+			session := sessions.Default(c)
+			if username := session.Get("username"); username != nil {
+				slog.Debug("logging out user...", "username", username)
+				session.Clear()
+				session.Save()
+			}
+			c.Redirect(http.StatusFound, "/api/v1/vm")
+		})
+	}
+
+	authenticated := router.Group("/api/v1/vm", SessionAuthMiddleware("Developer Workstations Realm", authenticator))
+	{
+
+		authenticated.GET("/", func(c *gin.Context) {
 			c.JSON(http.StatusOK, []*VM{
 				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm001", "running"),
 				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm002", "stopped"),
@@ -127,7 +161,7 @@ func (cmd *API) Execute(args []string) error {
 				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm005", "shelved"),
 			})
 		})
-		group.GET("/:vm", func(c *gin.Context) {
+		authenticated.GET("/:vm", func(c *gin.Context) {
 			c.JSON(http.StatusOK, NewVM("http://"+c.Request.Host+"/api/v1/vm", c.Param("vm"), "stopped"))
 		})
 	}

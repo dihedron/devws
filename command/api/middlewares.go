@@ -28,24 +28,10 @@ func Logger() gin.HandlerFunc {
 	}
 }
 
-type Authenticator interface {
-	Authenticate(c *gin.Context, username, password string) bool
-}
-
-type StaticAuthenticator struct {
-	Accounts map[string]string
-}
-
-func (a *StaticAuthenticator) Authenticate(c *gin.Context, username, password string) bool {
-	if pass, exists := a.Accounts[username]; exists {
-		return pass == password
-	}
-	return false
-}
-
 // SessionAuthMiddleware handles the combined Session + Basic Auth logic
 func SessionAuthMiddleware(realm string, authenticator Authenticator) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		slog.Debug("sesion manager middleware - START")
 		session := sessions.Default(c)
 		user := session.Get("username")
 
@@ -75,10 +61,11 @@ func SessionAuthMiddleware(realm string, authenticator Authenticator) gin.Handle
 		// no valid session and no/invalid Basic Auth; challenge the client.
 		// the WWW-Authenticate header triggers the browser's native login prompt
 		// or tells API clients (like curl/Postman) to provide Basic Auth.
-		c.Header("WWW-Authenticate", `Basic realm="`+realm+`"`)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized. Please provide valid credentials.",
-		})
+		// c.Header("WWW-Authenticate", `Basic realm="`+realm+`"`)
+		// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+		// 	"error": "Unauthorized. Please provide valid credentials.",
+		// })
+		c.Redirect(http.StatusFound, "/login")
 	}
 }
 
