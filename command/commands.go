@@ -1,12 +1,15 @@
 package command
 
 import (
+	"github.com/dihedron/slumberd/command/daemon"
 	"github.com/dihedron/slumberd/command/power"
 	"github.com/dihedron/slumberd/command/version"
 )
 
 // Commands is the set of root command groups.
 type Commands struct {
+	// Shutdown is the command that shuts down the machine.
+	Daemon daemon.Daemon `command:"daemon" alias:"d" description:"Daemon to monitor active SSH connections."`
 	// Shutdown is the command that shuts down the machine.
 	Shutdown power.Shutdown `command:"shutdown" alias:"s" description:"Shut down the machine."`
 	// Hibernate is the command that hibernates the machine.

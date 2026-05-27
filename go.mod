@@ -7,7 +7,6 @@ require (
 	github.com/gophercloud/gophercloud v1.14.1
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/joho/godotenv v1.5.1
-	golang.org/x/image v0.39.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
