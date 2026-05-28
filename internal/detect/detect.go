@@ -58,7 +58,7 @@ func IsAnyEditorActive2(procPath string) bool {
 }
 
 var (
-	editorRegex      = regexp.MustCompile(`vscode-server|code-server|cursor-server|windsurf-server|zed-remote-server|antigravity`)
+	editorRegex      = regexp.MustCompile(`vscode-server|code-server|cursor-server|windsurf-server|zed-remote-server|antigravity|tmux`)
 	interpreterRegex = regexp.MustCompile(`^(node|python3?|sh|bash|perl|ruby)$`)
 )
 

@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -47,8 +48,16 @@ func detectActivityHandler(action string, timeout timex.Duration, dryRun bool) e
 	slog.Debug("detectActivityHandler", "action", action, "timeout", timeout, "dryRun", dryRun)
 
 	editors := detect.IsAnyEditorActive("/proc")
-	if len(editors) == 0 {
+	if len(editors) > 0 {
 		slog.Info("No active editors detected!")
+
+		if len(editors) == 1 && editors[0] == "tmux" {
+			if isActive := detect.HasTmuxActivity(); isActive {
+				slog.Warn("tmux process has running activities")
+				return nil
+			}
+		}
+
 		switch action {
 		case "shutdown":
 			callAction("PowerOff", timeout, dryRun)
@@ -56,6 +65,7 @@ func detectActivityHandler(action string, timeout timex.Duration, dryRun bool) e
 			callAction("Hibernate", timeout, dryRun)
 		default:
 			slog.Error("Action not supplied or implemented!")
+			return fmt.Errorf("Action not supplied or implemented!")
 		}
 
 	}
