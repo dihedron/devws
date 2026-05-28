@@ -8,7 +8,7 @@
 
 version: 2
 
-project_name: slumberd
+project_name: devws
 
 env:
   - CGO_ENABLED=1
@@ -21,8 +21,8 @@ before:
     - go generate ./...
 
 builds:
-  - id: slumberd
-    binary: slumberd
+  - id: devws
+    binary: devws
     main: .
     goos:
       - linux
@@ -89,7 +89,7 @@ upx:
     enabled: false
 
     # Filter by build ID.
-    ids: [slumberd]
+    ids: [devws]
 
     # Filter by GOOS.
     goos: [linux, windows]
@@ -111,16 +111,17 @@ upx:
     #brute: true
 
 nfpms:
-  - id: slumberd
-    package_name: slumberd
+  - id: devws
+    package_name: devws
     homepage: "https://github.com/dihedron"
     maintainer: "Andrea Funtò <dihedron.dev@gmail.com>"
     description: |
-      Slumberd is a simple utility to check if the 
-      remote code server component of the variouos
-      IDEs is running on the local machine. It is
-      currently capable of detecting Visual Studio
-      Code, Antigravity, Cursor, Windsurf and Zed.
+      devws is a remote development workstations
+      management solution; it provides a way to 
+      monitor whether the virtual machine is in 
+      active use or has background tasks running,
+      and a tremote API to manage interactions 
+      with OpenStack to manage the VM's status.
     vendor: "Andrea Funtò"
     license: "MIT"
     formats:
@@ -128,7 +129,7 @@ nfpms:
       - deb
       - apk
     ids:
-      - slumberd
+      - devws
     contents:
       - src: ./{{.ProjectName}}.conf
         dst: /etc/{{.ProjectName}}.conf
@@ -144,16 +145,16 @@ nfpms:
 # MSI packaging is a GoReleaser Pro feature.
 # If you have GoReleaser Pro, you can uncomment the following section.
 # packagers:
-#   - id: slumberd-msi
+#   - id: devws-msi
 #     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 #     builds:
-#       - slumberd
+#       - devws
 #     extra_files:
 #       - src: ./slumbers.conf
 #     upgrade_code: "53c6e944-a35a-4e67-b3b9-8c9e7a8a0a3a"
 #     msi:
-#       component_id: Slumberd
-#       directory_id: Slumberd
+#       component_id: devws
+#       directory_id: devws
 
 source:
   enabled: true

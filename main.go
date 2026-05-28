@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dihedron/slumberd/command"
+	"github.com/dihedron/devws/command"
 	"github.com/jessevdk/go-flags"
 )
 

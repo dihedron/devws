@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '17 18 * * 3'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -28,7 +31,7 @@ jobs:
           build-mode: autobuild
     steps:
     - name: Checkout source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4

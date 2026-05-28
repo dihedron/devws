@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/dihedron/slumberd/command/base"
-	"github.com/dihedron/slumberd/timex"
+	"github.com/dihedron/devws/command/base"
+	"github.com/dihedron/devws/timex"
 	"github.com/godbus/dbus/v5"
 )
 
