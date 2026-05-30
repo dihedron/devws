@@ -41,6 +41,9 @@ func (cmd *List) Execute(args []string) error {
 	if cmd.Status != nil {
 		options = append(options, openstack.WithStatus(*cmd.Status))
 	}
+	if cmd.UserID != nil {
+		options = append(options, openstack.WithUserID(*cmd.UserID))
+	}
 
 	servers, err := client.ComputeV2.List(context.Background(), options...)
 	if err != nil {
