@@ -21,7 +21,7 @@ type ComputeV2 struct {
 
 // initialise the ComputeV2 client
 func newComputeV2(provider *gophercloud.ProviderClient) (*ComputeV2, error) {
-	slog.Debug("initialising compute v2 client", "region", DefaultRegion, "cloud", DefaultCloud)
+	slog.Debug("initialising compute v2 client")
 	if service, err := osp.NewComputeV2(provider, gophercloud.EndpointOpts{}); err != nil {
 		slog.Error("error creating compute v2 API client", "error", err)
 		return nil, fmt.Errorf("failed to create compute v2 client: %w", err)

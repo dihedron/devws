@@ -15,6 +15,7 @@ type IdentityV3 struct {
 }
 
 func newIdentityV3(provider *gophercloud.ProviderClient) (*IdentityV3, error) {
+	slog.Debug("initialising identity v3 client")
 	if service, err := osp.NewIdentityV3(provider, gophercloud.EndpointOpts{}); err != nil {
 		slog.Error("error creating identity v3 API client", "error", err)
 		return nil, fmt.Errorf("failed to create identity v3 client: %w", err)

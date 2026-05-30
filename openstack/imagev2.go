@@ -15,6 +15,7 @@ type ImageV2 struct {
 }
 
 func newImageV2(provider *gophercloud.ProviderClient) (*ImageV2, error) {
+	slog.Debug("initialising image v2 client")
 	if service, err := osp.NewImageServiceV2(provider, gophercloud.EndpointOpts{}); err != nil {
 		slog.Error("error creating image service v2 API client", "error", err)
 		return nil, fmt.Errorf("failed to create image service v2 client: %w", err)

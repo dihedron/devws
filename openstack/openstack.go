@@ -11,6 +11,8 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 )
 
+var DefaultCloud = "openstack"
+
 type Service struct {
 	provider *gophercloud.ProviderClient
 	client   *gophercloud.ServiceClient

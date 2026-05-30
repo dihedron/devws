@@ -15,6 +15,7 @@ type BlockStorageV3 struct {
 }
 
 func newBlockStorageV3(provider *gophercloud.ProviderClient) (*BlockStorageV3, error) {
+	slog.Debug("initialising block storage v3 client")
 	if service, err := osp.NewBlockStorageV3(provider, gophercloud.EndpointOpts{}); err != nil {
 		slog.Error("error creating block storage v3 API client", "error", err)
 		return nil, fmt.Errorf("failed to create block storage v3 client: %w", err)

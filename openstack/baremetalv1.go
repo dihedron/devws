@@ -15,6 +15,7 @@ type BareMetalV1 struct {
 }
 
 func newBareMetalV1(provider *gophercloud.ProviderClient) (*BareMetalV1, error) {
+	slog.Debug("initialising bare metal v1 client")
 	if service, err := osp.NewBareMetalV1(provider, gophercloud.EndpointOpts{}); err != nil {
 		slog.Error("error creating bare metal v1 API client", "error", err)
 		return nil, fmt.Errorf("failed to create bare metal v1 client: %w", err)
