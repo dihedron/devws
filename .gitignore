@@ -26,11 +26,12 @@ go.work
 go.work.sum
 
 # env file
-.env
+**/.env
 
 # test files
 _test/
 run.sh
+
 
 # Editor/IDE
 # .idea/

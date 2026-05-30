@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/gophercloud/gophercloud"
+	osp "github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 )
 
@@ -15,6 +17,24 @@ type ComputeV2 struct {
 	Service
 	// mu    sync.RWMutex
 	// cache map[string][]string // userID -> serverID(s)
+}
+
+// initialise the ComputeV2 client
+func newComputeV2(provider *gophercloud.ProviderClient) (*ComputeV2, error) {
+	slog.Debug("initialising compute v2 client", "region", DefaultRegion, "cloud", DefaultCloud)
+	if service, err := osp.NewComputeV2(provider, gophercloud.EndpointOpts{}); err != nil {
+		slog.Error("error creating compute v2 API client", "error", err)
+		return nil, fmt.Errorf("failed to create compute v2 client: %w", err)
+	} else {
+		slog.Info("compute v2 client initialised")
+		service.Microversion = ComputeV2MicroVersion
+		return &ComputeV2{
+			Service{
+				provider: provider,
+				client:   service,
+			},
+		}, nil
+	}
 }
 
 // c.mu.RLock()
