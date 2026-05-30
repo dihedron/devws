@@ -46,9 +46,9 @@ func newComputeV2(provider *gophercloud.ProviderClient) (*ComputeV2, error) {
 
 type ComputeV2ListOption func(*servers.ListOpts)
 
-func WithName(name string) ComputeV2ListOption {
+func WithName(pattern string) ComputeV2ListOption {
 	return func(o *servers.ListOpts) {
-		o.Name = name
+		o.Name = pattern
 	}
 }
 
