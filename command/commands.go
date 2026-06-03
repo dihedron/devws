@@ -2,20 +2,20 @@ package command
 
 import (
 	"github.com/dihedron/devws/command/login"
+	"github.com/dihedron/devws/command/portal"
 	"github.com/dihedron/devws/command/power"
 	"github.com/dihedron/devws/command/server"
 	"github.com/dihedron/devws/command/version"
-	"github.com/dihedron/devws/command/vm"
 )
 
 // Commands is the set of root command groups.
 type Commands struct {
 	// Login is the command that checks logins to an LDAP server.
 	Login login.Login `command:"login" alias:"l" description:"Log in to an LDAP server." hidden:"true"`
-	// VM is a set of commands against VMs.
-	VM vm.VM `command:"vm" description:"Run commands against VMs." `
+	// Server is a set of commands to manipulate OpenStack VMs.
+	Server server.Server `command:"server" description:"Manipulate openStack servers (VMs)."`
 	// API is the command that starts the API server.
-	Server server.Server `command:"server" alias:"a" description:"Start the API server." `
+	Portal portal.Portal `command:"portal" alias:"p" description:"Start the API server." `
 	// Shutdown is the command that shuts down the machine.
 	Shutdown power.Shutdown `command:"shutdown" alias:"s" description:"Shut down the machine."`
 	// Hibernate is the command that hibernates the machine.

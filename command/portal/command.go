@@ -1,4 +1,4 @@
-package server
+package portal
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Server struct {
+type Portal struct {
 	base.Command
 
 	Address string `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
@@ -72,8 +72,8 @@ func NewVM(base string, id string, status string) *VM {
 	}
 }
 
-func (cmd *Server) Execute(args []string) error {
-	slog.Info("starting API server", "address", cmd.Address)
+func (cmd *Portal) Execute(args []string) error {
+	slog.Info("starting portal and API server", "address", cmd.Address)
 
 	router := gin.New()
 	router.SetTrustedProxies(nil)
@@ -172,11 +172,11 @@ func (cmd *Server) Execute(args []string) error {
 	// https://github.com/puikinsh/login-forms/tree/main/forms/glassmorphism
 	// https://github.com/puikinsh/login-forms/tree/main/forms/material
 
-	slog.Info("API server running", "address", cmd.Address)
+	slog.Info("portal and API server running", "address", cmd.Address)
 	err := router.Run(cmd.Address)
 	if err != nil {
-		slog.Error("API server failed", "error", err)
-		return fmt.Errorf("API server failed: %w", err)
+		slog.Error("portal and API server failed", "error", err)
+		return fmt.Errorf("portal and API server failed: %w", err)
 	}
 	return nil
 }

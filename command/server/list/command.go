@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/dihedron/devws/command/vm/base"
+	"github.com/dihedron/devws/command/server/base"
 	"github.com/dihedron/devws/openstack"
 	"gopkg.in/yaml.v3"
 )
