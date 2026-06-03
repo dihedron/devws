@@ -71,9 +71,9 @@ func WithImage(imageURL string) ComputeV2ListOption {
 	}
 }
 
-func WithFlavor(flavorURL string) ComputeV2ListOption {
+func WithFlavour(flavourURL string) ComputeV2ListOption {
 	return func(o *servers.ListOpts) {
-		o.Flavor = flavorURL
+		o.Flavor = flavourURL
 	}
 }
 

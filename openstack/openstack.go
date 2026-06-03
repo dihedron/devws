@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/goccy/go-yaml"
 	"github.com/gophercloud/gophercloud"
 	osp "github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/utils/openstack/clientconfig"
@@ -68,9 +67,9 @@ func newClient(opts gophercloud.AuthOptions) (*Client, error) {
 	//slog.debug("checking token scope", "scope", fmt.Sprintf("%+v", provider.AuthenticatedProjectID))
 
 	// debug
-	ar := provider.GetAuthResult()
-	data, _ := yaml.Marshal(ar)
-	os.WriteFile("catalog.yml", data, 0644)
+	// ar := provider.GetAuthResult()
+	// data, _ := yaml.Marshal(ar)
+	// os.WriteFile("catalog.yml", data, 0644)
 
 	client := &Client{}
 
