@@ -8,7 +8,7 @@ import (
 
 	"github.com/dihedron/devws/command/vm/base"
 	"github.com/dihedron/devws/openstack"
-	"github.com/goccy/go-yaml"
+	"gopkg.in/yaml.v3"
 )
 
 type List struct {
