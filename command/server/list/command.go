@@ -2,13 +2,11 @@ package list
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
 	"github.com/dihedron/devws/command/server/base"
 	"github.com/dihedron/devws/openstack"
-	"gopkg.in/yaml.v3"
 )
 
 type List struct {
@@ -29,7 +27,10 @@ type List struct {
 
 func (cmd *List) Execute(args []string) error {
 	slog.Debug("running vm list command")
-	client, err := openstack.NewClient(cmd.Cloud)
+
+	cmd.Init()
+
+	client, err := openstack.NewClient(context.Background())
 	if err != nil {
 		slog.Error("error creating client", "error", err)
 		return err
@@ -61,16 +62,7 @@ func (cmd *List) Execute(args []string) error {
 		return err
 	}
 
-	switch cmd.Format {
-	case "yaml":
-		data, _ := yaml.Marshal(servers)
-		fmt.Printf("%s\n", data)
-	case "json":
-		data, _ := json.MarshalIndent(servers, "", "  ")
-		fmt.Printf("%s", string(data))
-	case "test":
-		fmt.Printf("%+v\n", servers)
-	}
+	cmd.Output(servers)
 	slog.Debug("vm list command completed")
 	return nil
 }

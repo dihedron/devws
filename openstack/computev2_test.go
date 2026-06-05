@@ -9,7 +9,7 @@ import (
 
 func TestList(t *testing.T) {
 	test.Setup(t)
-	client, err := NewClient("")
+	client, err := NewClient(t.Context())
 	if err != nil {
 		t.Logf("error creating client: %v", err)
 		t.FailNow()

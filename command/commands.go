@@ -13,7 +13,7 @@ type Commands struct {
 	// Login is the command that checks logins to an LDAP server.
 	Login login.Login `command:"login" alias:"l" description:"Log in to an LDAP server." hidden:"true"`
 	// Server is a set of commands to manipulate OpenStack VMs.
-	Server server.Server `command:"server" description:"Manipulate openStack servers (VMs)."`
+	Server server.Server `command:"server" description:"Manipulate OpenStack servers (VMs)."`
 	// API is the command that starts the API server.
 	Portal portal.Portal `command:"portal" alias:"p" description:"Start the API server." `
 	// Shutdown is the command that shuts down the machine.

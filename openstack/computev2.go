@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/gophercloud/gophercloud"
-	osp "github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 )
 
 const ComputeV2MicroVersion = "2.79"
@@ -22,7 +22,7 @@ type ComputeV2 struct {
 // initialise the ComputeV2 client
 func newComputeV2(provider *gophercloud.ProviderClient) (*ComputeV2, error) {
 	slog.Debug("initialising compute v2 client")
-	if service, err := osp.NewComputeV2(provider, gophercloud.EndpointOpts{}); err != nil {
+	if service, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{}); err != nil {
 		slog.Error("error creating compute v2 API client", "error", err)
 		return nil, fmt.Errorf("failed to create compute v2 client: %w", err)
 	} else {
@@ -104,7 +104,7 @@ func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([
 		option(&listOpts)
 	}
 
-	allPages, err := servers.List(c.client, listOpts).AllPages()
+	allPages, err := servers.List(c.client, listOpts).AllPages(ctx)
 	if err != nil {
 		slog.Error("error listing servers", "error", err)
 		return nil, fmt.Errorf("failed to list servers: %w", err)
