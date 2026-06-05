@@ -1,4 +1,4 @@
-package list
+package check
 
 import (
 	"context"
@@ -9,16 +9,16 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/tags"
 )
 
-type List struct {
+type Check struct {
 	base.Command
-	//ServerID string `short:"s" long:"server-id" description:"Status the virtual machine." required:"yes"`
 	Args struct {
 		ServerID string `positional-arg-name:"SERVERID" required:"true"`
+		Tag      string `positional-arg-name:"TAG" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
-func (cmd *List) Execute(args []string) error {
-	slog.Debug("running server tag list command", "serverId", cmd.Args.ServerID)
+func (cmd *Check) Execute(args []string) error {
+	slog.Debug("running server tag check command", "serverId", cmd.Args.ServerID, "tag", cmd.Args.Tag)
 
 	cmd.Init()
 
@@ -28,12 +28,12 @@ func (cmd *List) Execute(args []string) error {
 		return err
 	}
 
-	tags, err := tags.List(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID).Extract()
+	exists, err := tags.Check(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID, cmd.Args.Tag).Extract()
 	if err != nil {
-		slog.Error("error listing server tags", "error", err, "serverId", cmd.Args.ServerID)
+		slog.Error("error checking server tag", "error", err, "serverId", cmd.Args.ServerID, "tag", cmd.Args.Tag)
 		return err
 	}
 
-	cmd.Output(tags)
+	cmd.Output(exists)
 	return nil
 }

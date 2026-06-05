@@ -1,4 +1,4 @@
-package list
+package clear
 
 import (
 	"context"
@@ -9,16 +9,15 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/tags"
 )
 
-type List struct {
+type Clear struct {
 	base.Command
-	//ServerID string `short:"s" long:"server-id" description:"Status the virtual machine." required:"yes"`
 	Args struct {
 		ServerID string `positional-arg-name:"SERVERID" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
-func (cmd *List) Execute(args []string) error {
-	slog.Debug("running server tag list command", "serverId", cmd.Args.ServerID)
+func (cmd *Clear) Execute(args []string) error {
+	slog.Debug("running server tag clear command", "serverId", cmd.Args.ServerID)
 
 	cmd.Init()
 
@@ -28,12 +27,12 @@ func (cmd *List) Execute(args []string) error {
 		return err
 	}
 
-	tags, err := tags.List(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID).Extract()
+	err = tags.DeleteAll(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID).ExtractErr()
 	if err != nil {
-		slog.Error("error listing server tags", "error", err, "serverId", cmd.Args.ServerID)
+		slog.Error("error clearing server tags", "error", err, "serverId", cmd.Args.ServerID)
 		return err
 	}
 
-	cmd.Output(tags)
+	cmd.Output("ok")
 	return nil
 }
