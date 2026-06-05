@@ -10,7 +10,7 @@ import (
 	"runtime/pprof"
 	"strings"
 
-	"github.com/dihedron/slumberd/metadata"
+	"github.com/dihedron/devws/metadata"
 	"github.com/joho/godotenv"
 )
 

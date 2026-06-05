@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dihedron/slumberd/command/base"
-	"github.com/dihedron/slumberd/internal/actions"
-	"github.com/dihedron/slumberd/internal/monitor"
-	"github.com/dihedron/slumberd/timex"
+	"github.com/dihedron/devws/command/base"
+	"github.com/dihedron/devws/internal/actions"
+	"github.com/dihedron/devws/internal/monitor"
+	"github.com/dihedron/devws/timex"
 )
 
 type Daemon struct {

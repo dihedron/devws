@@ -1,13 +1,22 @@
 package command
 
 import (
-	"github.com/dihedron/slumberd/command/daemon"
-	"github.com/dihedron/slumberd/command/power"
-	"github.com/dihedron/slumberd/command/version"
+	"github.com/dihedron/devws/command/daemon"
+	"github.com/dihedron/devws/command/login"
+	"github.com/dihedron/devws/command/portal"
+	"github.com/dihedron/devws/command/power"
+	"github.com/dihedron/devws/command/server"
+	"github.com/dihedron/devws/command/version"
 )
 
 // Commands is the set of root command groups.
 type Commands struct {
+	// Login is the command that checks logins to an LDAP server.
+	Login login.Login `command:"login" alias:"l" description:"Log in to an LDAP server." hidden:"true"`
+	// Server is a set of commands to manipulate OpenStack VMs.
+	Server server.Server `command:"server" description:"Manipulate openStack servers (VMs)."`
+	// API is the command that starts the API server.
+	Portal portal.Portal `command:"portal" alias:"p" description:"Start the API server." `
 	// Shutdown is the command that shuts down the machine.
 	Daemon daemon.Daemon `command:"daemon" alias:"d" description:"Daemon to monitor active SSH connections."`
 	// Shutdown is the command that shuts down the machine.
