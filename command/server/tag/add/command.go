@@ -6,7 +6,6 @@ import (
 
 	"github.com/dihedron/devws/command/server/base"
 	"github.com/dihedron/devws/openstack"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/tags"
 )
 
 type Add struct {
@@ -28,12 +27,10 @@ func (cmd *Add) Execute(args []string) error {
 		return err
 	}
 
-	for _, tag := range cmd.Args.Tags {
-		err = tags.Add(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID, tag).ExtractErr()
-		if err != nil {
-			slog.Error("error adding server tag", "error", err, "serverId", cmd.Args.ServerID, "tag", tag)
-			return err
-		}
+	err = client.ComputeV2.AddTags(context.Background(), cmd.Args.ServerID, cmd.Args.Tags...)
+	if err != nil {
+		slog.Error("error adding server tags", "error", err, "serverId", cmd.Args.ServerID, "tags", cmd.Args.Tags)
+		return err
 	}
 	cmd.Output("ok")
 	slog.Debug("all tags added")

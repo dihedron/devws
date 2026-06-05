@@ -63,6 +63,6 @@ func (cmd *List) Execute(args []string) error {
 	}
 
 	cmd.Output(servers)
-	slog.Debug("vm list command completed")
+	slog.Debug("server list command completed")
 	return nil
 }

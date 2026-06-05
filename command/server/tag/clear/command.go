@@ -6,7 +6,6 @@ import (
 
 	"github.com/dihedron/devws/command/server/base"
 	"github.com/dihedron/devws/openstack"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/tags"
 )
 
 type Clear struct {
@@ -27,12 +26,11 @@ func (cmd *Clear) Execute(args []string) error {
 		return err
 	}
 
-	err = tags.DeleteAll(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID).ExtractErr()
+	err = client.ComputeV2.ClearTags(context.Background(), cmd.Args.ServerID)
 	if err != nil {
 		slog.Error("error clearing server tags", "error", err, "serverId", cmd.Args.ServerID)
 		return err
 	}
-
 	cmd.Output("ok")
 	return nil
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/dihedron/devws/command/server/base"
 	"github.com/dihedron/devws/openstack"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/tags"
 )
 
 type Replace struct {
@@ -28,7 +27,8 @@ func (cmd *Replace) Execute(args []string) error {
 		return err
 	}
 
-	tags, err := tags.ReplaceAll(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID, tags.ReplaceAllOpts{Tags: cmd.Args.Tags}).Extract()
+	//tags, err := tags.ReplaceAll(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID, tags.ReplaceAllOpts{Tags: cmd.Args.Tags}).Extract()
+	tags, err := client.ComputeV2.ReplaceTags(context.Background(), cmd.Args.ServerID, cmd.Args.Tags...)
 	if err != nil {
 		slog.Error("error replacing all server tags", "error", err, "serverId", cmd.Args.ServerID, "tags", cmd.Args.Tags)
 		return err

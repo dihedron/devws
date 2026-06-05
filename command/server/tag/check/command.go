@@ -6,7 +6,6 @@ import (
 
 	"github.com/dihedron/devws/command/server/base"
 	"github.com/dihedron/devws/openstack"
-	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/tags"
 )
 
 type Check struct {
@@ -28,7 +27,7 @@ func (cmd *Check) Execute(args []string) error {
 		return err
 	}
 
-	exists, err := tags.Check(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID, cmd.Args.Tag).Extract()
+	exists, err := client.ComputeV2.CheckTag(context.Background(), cmd.Args.ServerID, cmd.Args.Tag)
 	if err != nil {
 		slog.Error("error checking server tag", "error", err, "serverId", cmd.Args.ServerID, "tag", cmd.Args.Tag)
 		return err

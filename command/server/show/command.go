@@ -1,4 +1,4 @@
-package list
+package show
 
 import (
 	"context"
@@ -8,16 +8,15 @@ import (
 	"github.com/dihedron/devws/openstack"
 )
 
-type List struct {
+type Show struct {
 	base.Command
-	//ServerID string `short:"s" long:"server-id" description:"Status the virtual machine." required:"yes"`
 	Args struct {
 		ServerID string `positional-arg-name:"SERVERID" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
-func (cmd *List) Execute(args []string) error {
-	slog.Debug("running server tag list command", "serverId", cmd.Args.ServerID)
+func (cmd *Show) Execute(args []string) error {
+	slog.Debug("running vm list command")
 
 	cmd.Init()
 
@@ -27,11 +26,13 @@ func (cmd *List) Execute(args []string) error {
 		return err
 	}
 
-	tags, err := client.ComputeV2.ListTags(context.Background(), cmd.Args.ServerID)
+	server, err := client.ComputeV2.View(context.Background(), cmd.Args.ServerID)
 	if err != nil {
-		slog.Error("error listing server tags", "error", err, "serverId", cmd.Args.ServerID)
+		slog.Error("error viewing server details", "error", err, "serverId", cmd.Args.ServerID)
 		return err
 	}
-	cmd.Output(tags)
+
+	cmd.Output(server)
+	slog.Debug("server show command completed")
 	return nil
 }

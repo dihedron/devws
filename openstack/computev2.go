@@ -9,6 +9,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/tags"
 )
 
 const ComputeV2MicroVersion = "2.79"
@@ -97,6 +98,13 @@ func WithAnyTag(tags ...string) ComputeV2ListOption {
 	}
 }
 
+// Show retrieves details about a specific server, by id.
+func (c *ComputeV2) View(ctx context.Context, serverId string) (*servers.Server, error) {
+	slog.Info("looking up single server", "serverId", serverId)
+	return servers.Get(ctx, c.client, serverId).Extract()
+}
+
+// List lists all servers, possibly filtering using a set of criteria.
 func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([]servers.Server, error) {
 	slog.Info("looking up servers")
 	listOpts := servers.ListOpts{}
@@ -126,6 +134,64 @@ func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([
 	// c.mu.Unlock()
 
 	// return serverID, nil
+}
+
+func (c *ComputeV2) AddTags(ctx context.Context, serverId string, values ...string) error {
+	for _, tag := range values {
+		err := tags.Add(ctx, c.client, serverId, tag).ExtractErr()
+		if err != nil {
+			slog.Error("error adding server tag", "error", err, "serverId", serverId, "tag", tag)
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *ComputeV2) DeleteTags(ctx context.Context, serverId string, values ...string) error {
+	for _, tag := range values {
+		err := tags.Delete(ctx, c.client, serverId, tag).ExtractErr()
+		if err != nil {
+			slog.Error("error deleting server tag", "error", err, "serverId", serverId, "tag", tag)
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *ComputeV2) CheckTag(ctx context.Context, serverId string, tag string) (bool, error) {
+	exists, err := tags.Check(ctx, c.client, serverId, tag).Extract()
+	if err != nil {
+		slog.Error("error checking server tag", "error", err, "serverId", serverId, "tag", tag)
+		return false, err
+	}
+	return exists, nil
+}
+
+func (c *ComputeV2) ReplaceTags(ctx context.Context, serverId string, values ...string) ([]string, error) {
+	result, err := tags.ReplaceAll(ctx, c.client, serverId, tags.ReplaceAllOpts{Tags: values}).Extract()
+	if err != nil {
+		slog.Error("error replacing all server tags", "error", err, "serverId", serverId, "tags", values)
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *ComputeV2) ClearTags(ctx context.Context, serverId string) error {
+	err := tags.DeleteAll(ctx, c.client, serverId).ExtractErr()
+	if err != nil {
+		slog.Error("error clearing server tags", "error", err, "serverId", serverId)
+		return err
+	}
+	return nil
+}
+
+func (c *ComputeV2) ListTags(ctx context.Context, serverId string) ([]string, error) {
+	values, err := tags.List(ctx, c.client, serverId).Extract()
+	if err != nil {
+		slog.Error("error listing server tags", "error", err, "serverId", serverId)
+		return nil, err
+	}
+	return values, nil
 }
 
 // TODO: migrate these

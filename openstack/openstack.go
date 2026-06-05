@@ -2,6 +2,7 @@ package openstack
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -12,15 +13,16 @@ import (
 )
 
 var DefaultCloud = "openstack"
+var ErrNotImplemented = errors.New("not implemented")
 
 type Service struct {
 	provider *gophercloud.ProviderClient
 	client   *gophercloud.ServiceClient
 }
 
-func (s *Service) Client() *gophercloud.ServiceClient {
-	return s.client
-}
+// func (s *Service) Client() *gophercloud.ServiceClient {
+// 	return s.client
+// }
 
 type Client struct {
 	client *gophercloud.ProviderClient
