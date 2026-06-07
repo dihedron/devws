@@ -35,4 +35,5 @@ _test/
 # .idea/
 .vscode/
 *.code-workspace
+.antigravitycli
 

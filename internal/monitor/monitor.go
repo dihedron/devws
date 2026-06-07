@@ -61,11 +61,9 @@ type Result struct {
 }
 
 type Config struct {
-	CheckCPUProcesses bool
-
 	// CPUThreshold is the per-process CPU % above which a process is
-	// considered "busy". Measured over CPUSampleInterval. Default: 10.0
-	CPUThreshold float64
+	// considered "busy". Measured over CPUSampleInterval. Default: 10
+	CPUThreshold uint8
 
 	// CPUSampleInterval is how long we wait between two /proc/stat reads
 	// to compute CPU %. Default: 500 ms.
@@ -87,9 +85,9 @@ type Config struct {
 
 func (c Config) withDefaults() Config {
 	out := c
-	if out.CPUThreshold == 0 {
-		out.CPUThreshold = 10.0
-	}
+	// if out.CPUThreshold == 0 {
+	// 	out.CPUThreshold = 10
+	// }
 	if out.CPUSampleInterval == 0 {
 		out.CPUSampleInterval = 500 * time.Millisecond
 	}
@@ -151,7 +149,7 @@ func (m *Monitor) Check() (Result, error) {
 		result.Reasons = append(result.Reasons, r)
 	}
 
-	if m.cfg.CheckCPUProcesses {
+	if m.cfg.CPUThreshold > 0 {
 		// Step 6: [OPTIONAL] CPU sampling for detached/setsid processes
 		if r, busy := checkCPUUsage(snapshot, m.cfg, ignoredSet); busy {
 			result.Reasons = append(result.Reasons, r)

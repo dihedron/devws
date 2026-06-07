@@ -2,6 +2,7 @@ package timex
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -22,11 +23,18 @@ func (d *Duration) String() string {
 // parsed by the time.ParseDuration function (e.g., "30m", "1h"), and
 // populates the Duration variable accordingly.
 func (d *Duration) UnmarshalFlag(value string) error {
-	p, err := time.ParseDuration(value)
-	if err == nil {
-		*d = Duration(p)
+	var (
+		p   time.Duration
+		err error
+	)
+	if p, err = time.ParseDuration(value); err != nil {
+		return err
 	}
-	return err
+	if p < 0 {
+		return fmt.Errorf("duration must be positive, got %v", p)
+	}
+	*d = Duration(p)
+	return nil
 }
 
 // MarshalJSON marshals the Duration value into a JSON string.
@@ -36,15 +44,22 @@ func (d *Duration) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals a JSON string into the Duration variable.
 func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v string
+	var (
+		v   string
+		err error
+		p   time.Duration
+	)
 	if err := json.Unmarshal(b, &v); err != nil {
 		return err
 	}
-	p, err := time.ParseDuration(v)
-	if err == nil {
-		*d = Duration(p)
+	if p, err = time.ParseDuration(v); err != nil {
+		return err
 	}
-	return err
+	if p < 0 {
+		return fmt.Errorf("duration must be positive, got %v", p)
+	}
+	*d = Duration(p)
+	return nil
 }
 
 // MarshalText marshals the Duration value into a text string.
@@ -54,11 +69,17 @@ func (d *Duration) MarshalText() ([]byte, error) {
 
 // UnmarshalText unmarshals a text string into the Duration variable.
 func (d *Duration) UnmarshalText(text []byte) error {
-	v := string(text)
-	p, err := time.ParseDuration(v)
-	if err == nil {
-		*d = Duration(p)
+	var (
+		p   time.Duration
+		err error
+	)
+	if p, err = time.ParseDuration(string(text)); err != nil {
+		return err
 	}
+	if p < 0 {
+		return fmt.Errorf("duration must be positive, got %v", p)
+	}
+	*d = Duration(p)
 	return err
 }
 
@@ -69,13 +90,21 @@ func (d Duration) MarshalYAML() (any, error) {
 
 // UnmarshalYAML unmarshals a YAML string into the Duration variable.
 func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
-	var v string
+	var (
+		v   string
+		p   time.Duration
+		err error
+	)
 	if err := value.Decode(&v); err != nil {
 		return err
 	}
-	p, err := time.ParseDuration(v)
-	if err == nil {
-		*d = Duration(p)
+	p, err = time.ParseDuration(v)
+	if err != nil {
+		return err
 	}
-	return err
+	if p < 0 {
+		return fmt.Errorf("duration must be positive, got %v", p)
+	}
+	*d = Duration(p)
+	return nil
 }

@@ -87,7 +87,7 @@ func checkCPUUsage(
 		cfg.Logger.Debug("cpu sample",
 			"pid", c.info.PID, "comm", c.info.Comm, "cpu_pct", fmt.Sprintf("%.1f", pct))
 
-		if pct >= cfg.CPUThreshold {
+		if pct >= float64(cfg.CPUThreshold) {
 			busyPIDs = append(busyPIDs, c.info.PID)
 			details = append(details, fmt.Sprintf(
 				"%s(pid=%d,cpu=%.1f%%,state=%s)",
