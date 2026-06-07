@@ -23,7 +23,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/dihedron/slumberd/internal/detect"
+	"github.com/dihedron/devws/internal/detect"
 )
 
 // Decision is the outcome of a system activity check.

@@ -1,6 +1,6 @@
 package init
 
-import "github.com/dihedron/slumberd/command/base"
+import "github.com/dihedron/devws/command/base"
 
 type Init struct {
 	base.Command

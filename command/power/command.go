@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/dihedron/slumberd/command/base"
-	"github.com/dihedron/slumberd/internal/actions"
-	"github.com/dihedron/slumberd/timex"
+	"github.com/dihedron/devws/command/base"
+	"github.com/dihedron/devws/internal/actions"
+	"github.com/dihedron/devws/timex"
 )
 
 // Shutdown is the command that shuts down the machine.
