@@ -12,6 +12,7 @@ import (
 type List struct {
 	base.Command
 	// Name is the optional name or ID of the virtual machine.
+	//lint:ignore SA5008 multiple struct alias tags are allowed and useful
 	Detail string `short:"d" long:"detail" description:"The amount of information to show for each workstation." choice:"min" choice:"med" choice:"max" optional:"yes" default:"max"`
 	// Name is the optional name or ID of the virtual machine.
 	Name *string `short:"n" long:"name" description:"Name or ID of the virtual machine." optional:"yes"`

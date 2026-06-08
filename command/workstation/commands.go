@@ -8,6 +8,7 @@ import (
 
 type Workstation struct {
 	// List is the command that lists all available workstations.
+	//lint:ignore SA5008 multiple struct alias tags are allowed and useful
 	List list.List `command:"list" alias:"ls" alias:"l" description:"List all workstations."`
 	// Show is the command that displays a workstation's details.
 	Show show.Show `command:"show" alias:"s" description:"Show details about a workstation."`
