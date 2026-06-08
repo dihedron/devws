@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/dihedron/devws/command/server/base"
+	"github.com/dihedron/devws/command/workstation/base"
 	"github.com/dihedron/devws/openstack"
 )
 

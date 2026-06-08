@@ -1,12 +1,12 @@
 package tag
 
 import (
-	"github.com/dihedron/devws/command/server/tag/add"
-	"github.com/dihedron/devws/command/server/tag/check"
-	"github.com/dihedron/devws/command/server/tag/clear"
-	"github.com/dihedron/devws/command/server/tag/delete"
-	"github.com/dihedron/devws/command/server/tag/list"
-	"github.com/dihedron/devws/command/server/tag/replace"
+	"github.com/dihedron/devws/command/workstation/tag/add"
+	"github.com/dihedron/devws/command/workstation/tag/check"
+	"github.com/dihedron/devws/command/workstation/tag/clear"
+	"github.com/dihedron/devws/command/workstation/tag/delete"
+	"github.com/dihedron/devws/command/workstation/tag/list"
+	"github.com/dihedron/devws/command/workstation/tag/replace"
 )
 
 type Tag struct {

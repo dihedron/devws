@@ -2,6 +2,7 @@ package openstack
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -104,8 +105,88 @@ func (c *ComputeV2) View(ctx context.Context, serverId string) (*servers.Server,
 	return servers.Get(ctx, c.client, serverId).Extract()
 }
 
+// Instance is an internal type used to unmarshal more data from the API
+// response than would usually be possible through the ordinary gophercloud
+// struct. OpenStack API microversions enable more response data that is not
+// taken into account by the gophercloud library, which unmarshals only what
+// is available at the base level for each API version, for backward compatibility.
+// This is also why there is an ExtractInto function that allows you to pass in
+// an arbitrary struct to marshal the response data into.
+type Workstation struct {
+	ID           string `json:"id,omitempty" yaml:"id,omitempty"`
+	TenantID     string `json:"tenant_id,omitempty" yaml:"tenant_id,omitempty"`
+	UserID       string `json:"user_id,omitempty" yaml:"user_id,omitempty"`
+	Name         string `json:"name,omitempty" yaml:"name,omitempty"`
+	CreatedAt    *Time  `json:"created,omitempty" yaml:"created,omitempty"`
+	LaunchedAt   *Time  `json:"OS-SRV-USG:launched_at,omitempty" yaml:"OS-SRV-USG:launched_at,omitempty"`
+	UpdatedAt    *Time  `json:"updated,omitempty" yaml:"updated,omitempty"`
+	TerminatedAt *Time  `json:"OS-SRV-USG:terminated_at,omitempty" yaml:"OS-SRV-USG:terminated_at,omitempty"`
+	HostID       string `json:"hostid,omitempty" yaml:"hostid,omitempty"`
+	Status       string `json:"status,omitempty" yaml:"status,omitempty"`
+	Progress     int    `json:"progress,omitempty" yaml:"progress,omitempty"`
+	AccessIPv4   string `json:"accessIPv4,omitempty" yaml:"accessIPv4,omitempty"`
+	AccessIPv6   string `json:"accessIPv6,omitempty" yaml:"accessIPv6,omitempty"`
+	Image        any    `json:"image,omitempty" yaml:"image,omitempty"`
+	Flavor       struct {
+		Name          string          `json:"original_name,omitempty" yaml:"original_name,omitempty"`
+		Disk          int             `json:"disk,omitempty" yaml:"disk,omitempty"`
+		RAM           int             `json:"ram,omitempty" yaml:"ram,omitempty"`
+		Swap          int             `json:"-" yaml:"-"`
+		VCPUs         int             `json:"vcpus,omitempty" yaml:"vcpus,omitempty"`
+		Ephemeral     int             `json:"OS-FLV-EXT-DATA:ephemeral,omitempty" yaml:"OS-FLV-EXT-DATA:ephemeral,omitempty"`
+		ExtraSpecsRaw json.RawMessage `json:"extra_specs,omitempty" yaml:"extra_specs,omitempty"`
+		ExtraSpecsObj *struct {
+			CPUCores        string `json:"hw:cpu_cores,omitempty" yaml:"hw:cpu_cores,omitempty"`
+			CPUSockets      string `json:"hw:cpu_sockets,omitempty" yaml:"hw:cpu_sockets,omitempty"`
+			RNGAllowed      string `json:"hw_rng:allowed,omitempty" yaml:"hw_rng:allowed,omitempty"`
+			WatchdogAction  string `json:"hw:watchdog_action,omitempty" yaml:"hw:watchdog_action,omitempty"`
+			VGPUs           string `json:"resources:VGPU,omitempty" yaml:"resources:VGPU,omitempty"`
+			TraitCustomVGPU string `json:"trait:CUSTOM_VGPU,omitempty" yaml:"trait:CUSTOM_VGPU,omitempty"`
+		} `json:"-" yaml:"-"`
+		ExtraSpecsMap *map[string]string `json:"-" yaml:"-"`
+	} `json:"flavor,omitempty" yaml:"flavor,omitempty"`
+	Addresses map[string][]struct {
+		Network    *string `json:"-" yaml:"-"`
+		MACAddress string  `json:"OS-EXT-IPS-MAC:mac_addr,omitempty" yaml:"OS-EXT-IPS-MAC:mac_addr,omitempty"`
+		IPType     string  `json:"OS-EXT-IPS:type,omitempty" yaml:"OS-EXT-IPS:type,omitempty"`
+		IPAddress  string  `json:"addr,omitempty" yaml:"addr,omitempty"`
+		IPVersion  int     `json:"version,omitempty" yaml:"version,omitempty"`
+	} `json:"addresses,omitempty" yaml:"addresses,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Links    []struct {
+		Href string `json:"href,omitempty" yaml:"href,omitempty"`
+		Rel  string `json:"rel,omitempty" yaml:"rel,omitempty"`
+	} `json:"links,omitempty" yaml:"links,omitempty"`
+	KeyName        string `json:"key_name,omitempty" yaml:"key_name,omitempty"`
+	AdminPass      string `json:"adminPass,omitempty" yaml:"adminPass,omitempty"`
+	SecurityGroups []struct {
+		Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	} `json:"security_groups,omitempty" yaml:"security_groups,omitempty"`
+	AttachedVolumes    []servers.AttachedVolume `json:"os-extended-volumes:volumes_attached,omitempty" yaml:"os-extended-volumes:volumes_attached,omitempty"`
+	Tags               *[]string                `json:"tags,omitempty" yaml:"tags,omitempty"`
+	ServerGroups       *[]string                `json:"server_groups,omitempty" yaml:"server_groups,omitempty"`
+	DiskConfig         string                   `json:"OS-DCF:diskConfig,omitempty" yaml:"OS-DCF:diskConfig,omitempty"`
+	AvailabilityZone   string                   `json:"OS-EXT-AZ:availability_zone,omitempty" yaml:"OS-EXT-AZ:availability_zone,omitempty"`
+	Host               string                   `json:"OS-EXT-SRV-ATTR:host,omitempty" yaml:"OS-EXT-SRV-ATTR:host,omitempty"`
+	HostName           string                   `json:"OS-EXT-SRV-ATTR:hostname,omitempty" yaml:"OS-EXT-SRV-ATTR:hostname,omitempty"`
+	HypervisorHostname string                   `json:"OS-EXT-SRV-ATTR:hypervisor_hostname,omitempty" yaml:"OS-EXT-SRV-ATTR:hypervisor_hostname,omitempty"`
+	InstanceName       string                   `json:"OS-EXT-SRV-ATTR:instance_name,omitempty" yaml:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
+	KernelID           string                   `json:"OS-EXT-SRV-ATTR:kernel_id,omitempty" yaml:"OS-EXT-SRV-ATTR:kernel_id,omitempty"`
+	LaunchIndex        int                      `json:"OS-EXT-SRV-ATTR:launch_index,omitempty" yaml:"OS-EXT-SRV-ATTR:launch_index,omitempty"`
+	RAMDiskID          string                   `json:"OS-EXT-SRV-ATTR:ramdisk_id,omitempty" yaml:"OS-EXT-SRV-ATTR:ramdisk_id,omitempty"`
+	ReservationID      string                   `json:"OS-EXT-SRV-ATTR:reservation_id,omitempty" yaml:"OS-EXT-SRV-ATTR:reservation_id,omitempty"`
+	RootDeviceName     string                   `json:"OS-EXT-SRV-ATTR:root_device_name,omitempty" yaml:"OS-EXT-SRV-ATTR:root_device_name,omitempty"`
+	UserData           string                   `json:"OS-EXT-SRV-ATTR:user_data,omitempty" yaml:"OS-EXT-SRV-ATTR:user_data,omitempty"`
+	PowerState         int                      `json:"OS-EXT-STS:power_state,omitempty" yaml:"OS-EXT-STS:power_state,omitempty"`
+	VMState            string                   `json:"OS-EXT-STS:vm_state,omitempty" yaml:"OS-EXT-STS:vm_state,omitempty"`
+	ConfigDrive        string                   `json:"config_drive,omitempty" yaml:"config_drive,omitempty"`
+	Description        string                   `json:"description,omitempty" yaml:"description,omitempty"`
+	// NO!!! Fault              servers.Fault            `json:"fault,omitempty" yaml:"fault,omitempty"`
+	// NO!!! TaskState          interface{}              `json:"OS-EXT-STS:task_state,omitempty" yaml:"OS-EXT-STS:task_state,omitempty"`
+}
+
 // List lists all servers, possibly filtering using a set of criteria.
-func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([]servers.Server, error) {
+func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([]Workstation, error) {
 	slog.Info("looking up servers")
 	listOpts := servers.ListOpts{}
 	for _, option := range options {
@@ -118,7 +199,8 @@ func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([
 		return nil, fmt.Errorf("failed to list servers: %w", err)
 	}
 
-	allServers, err := servers.ExtractServers(allPages)
+	var allServers []Workstation
+	err = servers.ExtractServersInto(allPages, &allServers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract servers: %w", err)
 	}
@@ -127,13 +209,6 @@ func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([
 		return nil, nil
 	}
 	return allServers, nil
-
-	// serverID := allServers[0].ID
-	// c.mu.Lock()
-	// c.cache[userID] = serverID
-	// c.mu.Unlock()
-
-	// return serverID, nil
 }
 
 func (c *ComputeV2) AddTags(ctx context.Context, serverId string, values ...string) error {
