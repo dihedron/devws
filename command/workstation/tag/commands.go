@@ -21,6 +21,7 @@ type Tag struct {
 	//lint:ignore SA5008 multiple struct alias tags are allowed and useful
 	Delete delete.Delete `command:"delete" alias:"del" alias:"remove" alias:"rm" alias:"d" description:"Remove one or more tags from a virtual machine."`
 	// Clear is the command that clears all tags from a virtual machine.
+	//lint:ignore SA5008 multiple struct alias tags are allowed and useful
 	Clear clear.Clear `command:"clear" alias:"clr" alias:"x" description:"Clear all tags from a virtual machine."`
 	//lint:ignore SA5008 multiple struct alias tags are allowed and useful
 	// Replace is the command that replaces all tags on a virtual machine.

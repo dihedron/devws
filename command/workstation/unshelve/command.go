@@ -10,7 +10,7 @@ import (
 
 type Unshelve struct {
 	base.Command
-	AvailabilityZone string `short:"a" long:"az" description:"The evailiability zone into which to restore the workstation." required:"yes"`
+	AvailabilityZone string `short:"a" long:"availability-zone" description:"The availability zone into which to restore the workstation." required:"yes"`
 	Args             struct {
 		WorkstationNameOrID string `positional-arg-name:"WORKSTATION" required:"true"`
 	} `positional-args:"true" required:"true"`
