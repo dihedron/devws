@@ -1,4 +1,4 @@
-package clear
+package unshelve
 
 import (
 	"context"
@@ -8,15 +8,16 @@ import (
 	"github.com/dihedron/devws/openstack"
 )
 
-type Clear struct {
+type Unshelve struct {
 	base.Command
-	Args struct {
+	AvailabilityZone string `short:"a" long:"az" description:"The evailiability zone into which to restore the workstation." required:"yes"`
+	Args             struct {
 		WorkstationNameOrID string `positional-arg-name:"WORKSTATION" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
-func (cmd *Clear) Execute(args []string) error {
-	slog.Debug("running server tag clear command", "serverId", cmd.Args.WorkstationNameOrID)
+func (cmd *Unshelve) Execute(args []string) error {
+	slog.Debug("running workstation unshelve command")
 
 	cmd.Init()
 
@@ -32,11 +33,13 @@ func (cmd *Clear) Execute(args []string) error {
 		slog.Debug("error getting safe ID", "value", cmd.Args.WorkstationNameOrID, "error", err)
 	}
 
-	err = client.ComputeV2.ClearTags(ctx, id)
+	err = client.ComputeV2.Unshelve(ctx, id, cmd.AvailabilityZone)
 	if err != nil {
-		slog.Error("error clearing server tags", "error", err, "workstationId", id)
+		slog.Error("error unpausing workstation", "error", err, "workstationId", id, "availaibilityZone", cmd.AvailabilityZone)
 		return err
 	}
+
 	cmd.Output("ok")
+	slog.Debug("workstation unshelve command completed")
 	return nil
 }

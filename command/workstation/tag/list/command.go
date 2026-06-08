@@ -12,12 +12,12 @@ type List struct {
 	base.Command
 	//ServerID string `short:"s" long:"server-id" description:"Status the virtual machine." required:"yes"`
 	Args struct {
-		ServerID string `positional-arg-name:"SERVERID" required:"true"`
+		WorkstationNameOrID string `positional-arg-name:"WORKSTATION" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
 func (cmd *List) Execute(args []string) error {
-	slog.Debug("running server tag list command", "serverId", cmd.Args.ServerID)
+	slog.Debug("running server tag list command", "serverId", cmd.Args.WorkstationNameOrID)
 
 	cmd.Init()
 
@@ -27,9 +27,15 @@ func (cmd *List) Execute(args []string) error {
 		return err
 	}
 
-	tags, err := client.ComputeV2.ListTags(context.Background(), cmd.Args.ServerID)
+	ctx := context.Background()
+	id, err := client.ComputeV2.GetFirstID(ctx, cmd.Args.WorkstationNameOrID)
 	if err != nil {
-		slog.Error("error listing server tags", "error", err, "serverId", cmd.Args.ServerID)
+		slog.Debug("error getting safe ID", "value", cmd.Args.WorkstationNameOrID, "error", err)
+	}
+
+	tags, err := client.ComputeV2.ListTags(ctx, id)
+	if err != nil {
+		slog.Error("error listing server tags", "error", err, "workstationId", id)
 		return err
 	}
 	cmd.Output(tags)

@@ -31,6 +31,7 @@ type List struct {
 type brief struct {
 	ID        *string  `json:"id,omitempty" yaml:"id,omitempty"`
 	Name      *string  `json:"name,omitempty" yaml:"name,omitempty"`
+	Status    *string  `json:"status,omitempty" yaml:"status,omitempty"`
 	Addresses []string `json:"addresses,omitempty" yaml:"addresses,omitempty"`
 	Volumes   []string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
@@ -83,8 +84,9 @@ func (cmd *List) Execute(args []string) error {
 		results := []brief{}
 		for _, workstation := range workstations {
 			result := brief{
-				ID:   new(workstation.ID),
-				Name: new(workstation.Name),
+				ID:     new(workstation.ID),
+				Name:   new(workstation.Name),
+				Status: new(workstation.Status),
 			}
 			for _, address := range workstation.Addresses {
 				for _, a := range address {

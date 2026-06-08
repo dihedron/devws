@@ -1,4 +1,4 @@
-package clear
+package view
 
 import (
 	"context"
@@ -8,15 +8,15 @@ import (
 	"github.com/dihedron/devws/openstack"
 )
 
-type Clear struct {
+type View struct {
 	base.Command
 	Args struct {
 		WorkstationNameOrID string `positional-arg-name:"WORKSTATION" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
-func (cmd *Clear) Execute(args []string) error {
-	slog.Debug("running server tag clear command", "serverId", cmd.Args.WorkstationNameOrID)
+func (cmd *View) Execute(args []string) error {
+	slog.Debug("running workstation view command")
 
 	cmd.Init()
 
@@ -32,11 +32,13 @@ func (cmd *Clear) Execute(args []string) error {
 		slog.Debug("error getting safe ID", "value", cmd.Args.WorkstationNameOrID, "error", err)
 	}
 
-	err = client.ComputeV2.ClearTags(ctx, id)
+	server, err := client.ComputeV2.View(ctx, id)
 	if err != nil {
-		slog.Error("error clearing server tags", "error", err, "workstationId", id)
+		slog.Error("error viewing workstation details", "error", err, "workstation", cmd.Args.WorkstationNameOrID)
 		return err
 	}
-	cmd.Output("ok")
+
+	cmd.Output(server)
+	slog.Debug("workstation view command completed")
 	return nil
 }

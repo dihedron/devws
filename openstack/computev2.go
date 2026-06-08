@@ -3,8 +3,10 @@ package openstack
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strings"
 
 	"github.com/gophercloud/gophercloud/v2"
@@ -17,8 +19,6 @@ const ComputeV2MicroVersion = "2.79"
 
 type ComputeV2 struct {
 	Service
-	// mu    sync.RWMutex
-	// cache map[string][]string // userID -> serverID(s)
 }
 
 // initialise the ComputeV2 client
@@ -97,12 +97,6 @@ func WithAnyTag(tags ...string) ComputeV2ListOption {
 			o.TagsAny = o.TagsAny + "," + strings.Join(tags, ",")
 		}
 	}
-}
-
-// Show retrieves details about a specific server, by id.
-func (c *ComputeV2) View(ctx context.Context, serverId string) (*servers.Server, error) {
-	slog.Info("looking up single server", "serverId", serverId)
-	return servers.Get(ctx, c.client, serverId).Extract()
 }
 
 // Instance is an internal type used to unmarshal more data from the API
@@ -185,7 +179,40 @@ type Workstation struct {
 	// NO!!! TaskState          interface{}              `json:"OS-EXT-STS:task_state,omitempty" yaml:"OS-EXT-STS:task_state,omitempty"`
 }
 
-// List lists all servers, possibly filtering using a set of criteria.
+var (
+	uuid        = regexp.MustCompile(`(?i)^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`)
+	ErrNotFound = errors.New("item not found")
+)
+
+func (c *ComputeV2) GetFirstID(ctx context.Context, value string) (string, error) {
+	ids, err := c.GetAllIDs(ctx, value)
+	if err != nil {
+		return "", err
+	}
+	if len(ids) > 0 {
+		return ids[0], nil
+	}
+	return "", ErrNotFound
+}
+
+func (c *ComputeV2) GetAllIDs(ctx context.Context, value string) ([]string, error) {
+	if uuid.MatchString(value) {
+		slog.Debug("value is already an ID", "value", value)
+		return []string{value}, nil
+	}
+	slog.Debug("need to resolve name to ID", "value", value)
+	wks, err := c.List(ctx, WithName(strings.ReplaceAll(value, ".", "\\.")))
+	if err != nil {
+		return nil, err
+	}
+	ids := []string{}
+	for _, w := range wks {
+		ids = append(ids, w.ID)
+	}
+	return ids, nil
+}
+
+// List lists all workstations, possibly filtering using a set of criteria.
 func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([]Workstation, error) {
 	slog.Info("looking up servers")
 	listOpts := servers.ListOpts{}
@@ -209,6 +236,79 @@ func (c *ComputeV2) List(ctx context.Context, options ...ComputeV2ListOption) ([
 		return nil, nil
 	}
 	return allServers, nil
+}
+
+// View retrieves details about a specific server, by id.
+func (c *ComputeV2) View(ctx context.Context, serverId string) (*Workstation, error) {
+	slog.Info("looking up single server", "serverId", serverId)
+	wks := &Workstation{}
+	err := servers.Get(ctx, c.client, serverId).ExtractInto(wks)
+	return wks, err
+}
+
+func (c *ComputeV2) Reboot(ctx context.Context, serverId string, method servers.RebootMethod) error {
+	return servers.Reboot(ctx, c.client, serverId, servers.RebootOpts{Type: method}).ExtractErr()
+}
+
+func (c *ComputeV2) SoftReboot(ctx context.Context, serverId string) error {
+	return c.Reboot(ctx, serverId, servers.SoftReboot)
+}
+
+func (c *ComputeV2) HardReboot(ctx context.Context, serverId string) error {
+	return c.Reboot(ctx, serverId, servers.HardReboot)
+}
+
+// Start starts a specific server, by id.
+func (c *ComputeV2) Start(ctx context.Context, serverId string) error {
+	slog.Info("starting a server", "serverId", serverId)
+	return servers.Start(ctx, c.client, serverId).ExtractErr()
+}
+
+// Stops starts a specific server, by id.
+func (c *ComputeV2) Stop(ctx context.Context, serverId string) error {
+	slog.Info("stopping a server", "serverId", serverId)
+	return servers.Stop(ctx, c.client, serverId).ExtractErr()
+}
+
+// Suspend suspends a specific server, by id.
+func (c *ComputeV2) Suspend(ctx context.Context, serverId string) error {
+	slog.Info("suspending a server", "serverId", serverId)
+	return servers.Suspend(ctx, c.client, serverId).ExtractErr()
+}
+
+// Resume resumes a specific server, by id.
+func (c *ComputeV2) Resume(ctx context.Context, serverId string) error {
+	slog.Info("resuming a server", "serverId", serverId)
+	return servers.Resume(ctx, c.client, serverId).ExtractErr()
+}
+
+// Pause pauses a specific server, by id.
+func (c *ComputeV2) Pause(ctx context.Context, serverId string) error {
+	slog.Info("pausing a server", "serverId", serverId)
+	return servers.Pause(ctx, c.client, serverId).ExtractErr()
+}
+
+// Unpause unpauses a specific server, by id.
+func (c *ComputeV2) Unpause(ctx context.Context, serverId string) error {
+	slog.Info("unpausing a server", "serverId", serverId)
+	return servers.Unpause(ctx, c.client, serverId).ExtractErr()
+}
+
+// Shelve is the operation responsible for shelving a server.
+func (c *ComputeV2) Shelve(ctx context.Context, serverId string) error {
+	slog.Info("shelving a server", "serverId", serverId)
+	return servers.Shelve(ctx, c.client, serverId).ExtractErr()
+}
+
+// ShelveOffload is the operation responsible for Shelve-Offload a server.
+func (c *ComputeV2) ShelveOffload(ctx context.Context, serverId string) error {
+	slog.Info("shelve-offloading a server", "serverId", serverId)
+	return servers.ShelveOffload(ctx, c.client, serverId).ExtractErr()
+}
+
+func (c *ComputeV2) Unshelve(ctx context.Context, serverId string, availabilityZone string) error {
+	slog.Info("unshelving a server", "serverId", serverId, "availabilityZone", availabilityZone)
+	return servers.Unshelve(ctx, c.client, serverId, servers.UnshelveOpts{AvailabilityZone: availabilityZone}).ExtractErr()
 }
 
 func (c *ComputeV2) AddTags(ctx context.Context, serverId string, values ...string) error {
@@ -268,52 +368,3 @@ func (c *ComputeV2) ListTags(ctx context.Context, serverId string) ([]string, er
 	}
 	return values, nil
 }
-
-// TODO: migrate these
-// func (c *Client) Start(ctx context.Context, userID string) error {
-// 	id, err := c.getServerID(ctx, userID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	res := startstop.Start(c.client, id)
-// 	return res.ExtractErr()
-// }
-
-// func (c *Client) Stop(ctx context.Context, userID string) error {
-// 	id, err := c.getServerID(ctx, userID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	res := startstop.Stop(c.client, id)
-// 	return res.ExtractErr()
-// }
-
-// func (c *Client) Pause(ctx context.Context, userID string) error {
-// 	id, err := c.getServerID(ctx, userID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	res := pauseunpause.Pause(c.client, id)
-// 	return res.ExtractErr()
-// }
-
-// func (c *Client) Unpause(ctx context.Context, userID string) error {
-// 	id, err := c.getServerID(ctx, userID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	res := pauseunpause.Unpause(c.client, id)
-// 	return res.ExtractErr()
-// }
-
-// func (c *Client) Status(ctx context.Context, userID string) (string, error) {
-// 	id, err := c.getServerID(ctx, userID)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	server, err := servers.Get(c.client, id).Extract()
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return server.Status, nil
-// }

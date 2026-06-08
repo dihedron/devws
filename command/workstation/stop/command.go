@@ -1,4 +1,4 @@
-package clear
+package stop
 
 import (
 	"context"
@@ -8,15 +8,15 @@ import (
 	"github.com/dihedron/devws/openstack"
 )
 
-type Clear struct {
+type Stop struct {
 	base.Command
 	Args struct {
 		WorkstationNameOrID string `positional-arg-name:"WORKSTATION" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
-func (cmd *Clear) Execute(args []string) error {
-	slog.Debug("running server tag clear command", "serverId", cmd.Args.WorkstationNameOrID)
+func (cmd *Stop) Execute(args []string) error {
+	slog.Debug("running workstation stop command")
 
 	cmd.Init()
 
@@ -32,11 +32,13 @@ func (cmd *Clear) Execute(args []string) error {
 		slog.Debug("error getting safe ID", "value", cmd.Args.WorkstationNameOrID, "error", err)
 	}
 
-	err = client.ComputeV2.ClearTags(ctx, id)
+	err = client.ComputeV2.Stop(ctx, id)
 	if err != nil {
-		slog.Error("error clearing server tags", "error", err, "workstationId", id)
+		slog.Error("error stopping workstation", "error", err, "workstationId", id)
 		return err
 	}
+
 	cmd.Output("ok")
+	slog.Debug("workstation stop command completed")
 	return nil
 }

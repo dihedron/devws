@@ -1,4 +1,4 @@
-package clear
+package shelve
 
 import (
 	"context"
@@ -8,15 +8,16 @@ import (
 	"github.com/dihedron/devws/openstack"
 )
 
-type Clear struct {
+type Shelve struct {
 	base.Command
-	Args struct {
+	Offload bool `short:"o" long:"offload" description:"Whether to also offload the workstation storage data." optional:"yes"`
+	Args    struct {
 		WorkstationNameOrID string `positional-arg-name:"WORKSTATION" required:"true"`
 	} `positional-args:"true" required:"true"`
 }
 
-func (cmd *Clear) Execute(args []string) error {
-	slog.Debug("running server tag clear command", "serverId", cmd.Args.WorkstationNameOrID)
+func (cmd *Shelve) Execute(args []string) error {
+	slog.Debug("running workstation shelve command")
 
 	cmd.Init()
 
@@ -32,11 +33,17 @@ func (cmd *Clear) Execute(args []string) error {
 		slog.Debug("error getting safe ID", "value", cmd.Args.WorkstationNameOrID, "error", err)
 	}
 
-	err = client.ComputeV2.ClearTags(ctx, id)
+	if cmd.Offload {
+		err = client.ComputeV2.ShelveOffload(ctx, id)
+	} else {
+		err = client.ComputeV2.Shelve(ctx, id)
+	}
 	if err != nil {
-		slog.Error("error clearing server tags", "error", err, "workstationId", id)
+		slog.Error("error shelving workstation", "error", err, "workstationId", id, "offload", cmd.Offload)
 		return err
 	}
+
 	cmd.Output("ok")
+	slog.Debug("workstation shelve command completed")
 	return nil
 }
