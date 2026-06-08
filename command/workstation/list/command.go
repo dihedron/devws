@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"slices"
 
 	"github.com/dihedron/devws/command/workstation/base"
 	"github.com/dihedron/devws/openstack"
@@ -13,7 +12,7 @@ import (
 type List struct {
 	base.Command
 	// Name is the optional name or ID of the virtual machine.
-	With []string `short:"w" long:"with" description:"Whether to display only the given information items." choice:"id" choice:"name" choice:"address" choice:"addresses" choice:"volumes" optional:"yes"`
+	Detail string `short:"d" long:"detail" description:"The amount of information to show for each workstation." choice:"min" choice:"med" choice:"max" optional:"yes" default:"max"`
 	// Name is the optional name or ID of the virtual machine.
 	Name *string `short:"n" long:"name" description:"Name or ID of the virtual machine." optional:"yes"`
 	// Owner is the optional owner of the virtual machine.
@@ -31,7 +30,6 @@ type List struct {
 type brief struct {
 	ID        *string  `json:"id,omitempty" yaml:"id,omitempty"`
 	Name      *string  `json:"name,omitempty" yaml:"name,omitempty"`
-	Address   *string  `json:"address,omitempty" yaml:"address,omitempty"`
 	Addresses []string `json:"addresses,omitempty" yaml:"addresses,omitempty"`
 	Volumes   []string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
@@ -73,43 +71,36 @@ func (cmd *List) Execute(args []string) error {
 		return err
 	}
 
-	if len(cmd.With) > 0 {
+	switch cmd.Detail {
+	case "min":
+		ids := []string{}
+		for _, workstation := range workstations {
+			ids = append(ids, workstation.ID)
+		}
+		cmd.Output(ids)
+	case "med":
 		results := []brief{}
 		for _, workstation := range workstations {
-			result := brief{}
-			if slices.Contains(cmd.With, "id") {
-				result.ID = new(workstation.ID)
+			result := brief{
+				ID:   new(workstation.ID),
+				Name: new(workstation.Name),
 			}
-			if slices.Contains(cmd.With, "name") {
-				result.Name = new(workstation.Name)
-			}
-			if slices.Contains(cmd.With, "address") {
-				for _, address := range workstation.Addresses {
-					for _, a := range address {
-						result.Address = new(a.IPAddress)
-						break
-					}
+			for _, address := range workstation.Addresses {
+				for _, a := range address {
+					result.Addresses = append(result.Addresses, a.IPAddress)
 				}
 			}
-			if slices.Contains(cmd.With, "addresses") {
-				for _, address := range workstation.Addresses {
-					for _, a := range address {
-						result.Addresses = append(result.Addresses, a.IPAddress)
-					}
-				}
-			}
-			if slices.Contains(cmd.With, "volumes") {
-				for _, volume := range workstation.AttachedVolumes {
-					result.Volumes = append(result.Volumes, volume.ID)
-				}
+			for _, volume := range workstation.AttachedVolumes {
+				result.Volumes = append(result.Volumes, volume.ID)
 			}
 			// TODO: add more information items if of interest
 			results = append(results, result)
 		}
 		cmd.Output(results)
-	} else {
+	case "max":
 		cmd.Output(workstations)
 	}
+
 	slog.Debug("server list command completed")
 	return nil
 }
