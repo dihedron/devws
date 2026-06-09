@@ -1,21 +1,28 @@
 package openstack
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 
-	"github.com/gophercloud/gophercloud"
-	osp "github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/utils/openstack/clientconfig"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/config"
+	"github.com/gophercloud/gophercloud/v2/openstack/config/clouds"
 )
 
 var DefaultCloud = "openstack"
+var ErrNotImplemented = errors.New("not implemented")
 
 type Service struct {
 	provider *gophercloud.ProviderClient
 	client   *gophercloud.ServiceClient
 }
+
+// func (s *Service) Client() *gophercloud.ServiceClient {
+// 	return s.client
+// }
 
 type Client struct {
 	client *gophercloud.ProviderClient
@@ -27,43 +34,46 @@ type Client struct {
 	NetworkingV2   *NetworkingV2
 }
 
-func NewClient(cloud string) (*Client, error) {
-	if cloud == "" {
-		cloud = DefaultCloud
-	}
-	if c, ok := os.LookupEnv("OS_CLOUD"); ok {
-		slog.Debug("using custom cloud as per the OS_CLOUD environment variable", "cloud", c)
-		cloud = c
-	}
-
-	opts, err := clientconfig.AuthOptions(&clientconfig.ClientOpts{
-		Cloud: cloud,
-	})
+func NewClient(ctx context.Context) (*Client, error) {
+	// fetch coordinates from a `cloud.yaml` in the current directory, or
+	// in the well-known config directories (different for each operating
+	// system).
+	authOpts, _, tlsConfig, err := clouds.Parse()
 	if err != nil {
-		slog.Error("failed to get auth options", "error", err)
-		return nil, fmt.Errorf("failed to get auth options: %w", err)
-	}
-
-	return newClient(*opts)
-}
-
-func NewClientFromEnv() (*Client, error) {
-	opts, err := osp.AuthOptionsFromEnv()
-	if err != nil {
-		slog.Error("failed to get auth options from environment", "error", err)
+		slog.Error("failed to get options from cloud.yaml", "error", err)
 		return nil, fmt.Errorf("failed to get auth options from environment: %w", err)
 	}
-	return newClient(opts)
-}
 
-func newClient(opts gophercloud.AuthOptions) (*Client, error) {
-	opts.AllowReauth = true
-	provider, err := osp.AuthenticatedClient(opts)
+	// call Keystone to get an authentication token and construct a ProviderClient
+	authOpts.AllowReauth = true
+	provider, err := config.NewProviderClient(ctx, authOpts, config.WithTLSConfig(tlsConfig))
 	if err != nil {
 		slog.Error("error creating authenticated client", "error", err)
 		return nil, fmt.Errorf("failed to authenticate: %w", err)
 	}
 
+	return newClient(ctx, provider)
+}
+
+func NewClientFromEnv(ctx context.Context) (*Client, error) {
+	opts, err := openstack.AuthOptionsFromEnv()
+	if err != nil {
+		slog.Error("failed to get auth options from environment", "error", err)
+		return nil, fmt.Errorf("failed to get auth options from environment: %w", err)
+	}
+	// call Keystone to get an authentication token and construct a ProviderClient
+	provider, err := openstack.AuthenticatedClient(ctx, opts)
+	if err != nil {
+		slog.Error("error creating authenticated client", "error", err)
+		return nil, fmt.Errorf("failed to authenticate: %w", err)
+	}
+
+	return newClient(ctx, provider)
+}
+
+func newClient(ctx context.Context, provider *gophercloud.ProviderClient /*, endpointOpts gophercloud.EndpointOpts*/) (*Client, error) {
+
+	var err error
 	//slog.debug("checking token scope", "scope", fmt.Sprintf("%+v", provider.AuthenticatedProjectID))
 
 	// debug
@@ -71,7 +81,9 @@ func newClient(opts gophercloud.AuthOptions) (*Client, error) {
 	// data, _ := yaml.Marshal(ar)
 	// os.WriteFile("catalog.yml", data, 0644)
 
-	client := &Client{}
+	client := &Client{
+		client: provider,
+	}
 
 	// // initialize Bare Metal client
 	// if client.BareMetalV1, err = newBareMetalV1(provider); err != nil {

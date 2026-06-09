@@ -31,7 +31,7 @@ func Logger() gin.HandlerFunc {
 // SessionAuthMiddleware handles the combined Session + Basic Auth logic
 func SessionAuthMiddleware(realm string, authenticator Authenticator) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		slog.Debug("sesion manager middleware - START")
+		slog.Debug("session manager middleware - START")
 		session := sessions.Default(c)
 		user := session.Get("username")
 

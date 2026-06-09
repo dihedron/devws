@@ -2,17 +2,18 @@ package list
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
-	"github.com/dihedron/devws/command/server/base"
+	"github.com/dihedron/devws/command/workstation/base"
 	"github.com/dihedron/devws/openstack"
-	"gopkg.in/yaml.v3"
 )
 
 type List struct {
 	base.Command
+	// Name is the optional name or ID of the virtual machine.
+	//lint:ignore SA5008 multiple struct alias tags are allowed and useful
+	Detail string `short:"d" long:"detail" description:"The amount of information to show for each workstation." choice:"min" choice:"med" choice:"max" optional:"yes" default:"max"`
 	// Name is the optional name or ID of the virtual machine.
 	Name *string `short:"n" long:"name" description:"Name or ID of the virtual machine." optional:"yes"`
 	// Owner is the optional owner of the virtual machine.
@@ -27,9 +28,20 @@ type List struct {
 	Flavour *string `short:"f" long:"flavour" description:"The URL of the flavour of the virtual machine." optional:"yes"`
 }
 
+type brief struct {
+	ID        *string  `json:"id,omitempty" yaml:"id,omitempty"`
+	Name      *string  `json:"name,omitempty" yaml:"name,omitempty"`
+	Status    *string  `json:"status,omitempty" yaml:"status,omitempty"`
+	Addresses []string `json:"addresses,omitempty" yaml:"addresses,omitempty"`
+	Volumes   []string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
+}
+
 func (cmd *List) Execute(args []string) error {
 	slog.Debug("running vm list command")
-	client, err := openstack.NewClient(cmd.Cloud)
+
+	cmd.Init()
+
+	client, err := openstack.NewClient(context.Background())
 	if err != nil {
 		slog.Error("error creating client", "error", err)
 		return err
@@ -55,22 +67,43 @@ func (cmd *List) Execute(args []string) error {
 		options = append(options, openstack.WithFlavour(*cmd.Flavour))
 	}
 
-	servers, err := client.ComputeV2.List(context.Background(), options...)
+	workstations, err := client.ComputeV2.List(context.Background(), options...)
 	if err != nil {
-		slog.Error("error listing servers", "error", err)
+		slog.Error("error listing workstations", "error", err)
 		return err
 	}
 
-	switch cmd.Format {
-	case "yaml":
-		data, _ := yaml.Marshal(servers)
-		fmt.Printf("%s\n", data)
-	case "json":
-		data, _ := json.MarshalIndent(servers, "", "  ")
-		fmt.Printf("%s", string(data))
-	case "test":
-		fmt.Printf("%+v\n", servers)
+	switch cmd.Detail {
+	case "min":
+		ids := []string{}
+		for _, workstation := range workstations {
+			ids = append(ids, workstation.ID)
+		}
+		cmd.Output(ids)
+	case "med":
+		results := []brief{}
+		for _, workstation := range workstations {
+			result := brief{
+				ID:     new(workstation.ID),
+				Name:   new(workstation.Name),
+				Status: new(workstation.Status),
+			}
+			for _, address := range workstation.Addresses {
+				for _, a := range address {
+					result.Addresses = append(result.Addresses, a.IPAddress)
+				}
+			}
+			for _, volume := range workstation.AttachedVolumes {
+				result.Volumes = append(result.Volumes, volume.ID)
+			}
+			// TODO: add more information items if of interest
+			results = append(results, result)
+		}
+		cmd.Output(results)
+	case "max":
+		cmd.Output(workstations)
 	}
-	slog.Debug("vm list command completed")
+
+	slog.Debug("server list command completed")
 	return nil
 }

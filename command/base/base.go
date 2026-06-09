@@ -1,5 +1,4 @@
 package base
 
 // Command is the base command.
-type Command struct {
-}
+type Command struct{}
