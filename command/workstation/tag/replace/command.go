@@ -32,7 +32,7 @@ func (cmd *Replace) Execute(args []string) error {
 	if err != nil {
 		slog.Debug("error getting safe ID", "value", cmd.Args.WorkstationNameOrID, "error", err)
 	}
-	//tags, err := tags.ReplaceAll(context.Background(), client.ComputeV2.Client(), cmd.Args.ServerID, tags.ReplaceAllOpts{Tags: cmd.Args.Tags}).Extract()
+
 	tags, err := client.ComputeV2.ReplaceTags(ctx, id, cmd.Args.Tags...)
 	if err != nil {
 		slog.Error("error replacing all server tags", "error", err, "workstationId", id, "tags", cmd.Args.Tags)
