@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
+	"strconv"
+	"text/template"
 
 	"github.com/dihedron/devws/command/base"
 	"github.com/gin-contrib/sessions"
@@ -92,6 +95,10 @@ func (cmd *Portal) Execute(args []string) error {
 		sessions.Sessions("api_session", cookie.NewStore([]byte("super-secret-key"))),
 	)
 
+	router.SetFuncMap(template.FuncMap{})
+	router.LoadHTMLGlob("command/portal/assets/*.html")
+	router.LoadHTMLGlob("command/portal/templates/*.html")
+
 	// define an authenticator
 	authenticator := NewStaticAuthenticator(
 		WithUser("admin", "QWERTY"),
@@ -116,7 +123,9 @@ func (cmd *Portal) Execute(args []string) error {
 		})
 		// authentication endpoints: the /api/v1/auth/login and
 		// /api/v1/auth/logout routes do not need authentication
-		unauthenticated.StaticFile("/api/v1/auth/login", "./command/server/assets/login.html")
+		unauthenticated.GET("/api/v1/auth/login", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "login.html", nil)
+		})
 		unauthenticated.POST("/api/v1/auth/login", func(c *gin.Context) {
 			username := c.PostForm("username")
 			password := c.PostForm("password")
@@ -140,32 +149,57 @@ func (cmd *Portal) Execute(args []string) error {
 			}
 
 		})
-		unauthenticated.GET("/api/v1/auth/logout", func(c *gin.Context) {
-			session := sessions.Default(c)
-			if username := session.Get("username"); username != nil {
-				slog.Debug("logging out user...", "username", username)
-				session.Clear()
-				session.Save()
-			}
-			c.Redirect(http.StatusFound, "/api/v1/vm")
-		})
+
 	}
 
 	authenticated := router.Group("/api/v1/vm", SessionAuthMiddleware("Developer Workstations Realm", authenticator))
 	{
 
 		authenticated.GET("/", func(c *gin.Context) {
-			c.JSON(http.StatusOK, []*VM{
-				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm001", "running"),
-				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm002", "stopped"),
-				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm003", "running"),
-				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm004", "paused"),
-				NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm005", "shelved"),
+			session := sessions.Default(c)
+			c.Header("HX-Redirect", "/")
+			c.HTML(http.StatusOK, "dashboard.html", gin.H{
+				"Username": session.Get("username"),
 			})
 		})
-		authenticated.GET("/:vm", func(c *gin.Context) {
-			c.JSON(http.StatusOK, NewVM("http://"+c.Request.Host+"/api/v1/vm", c.Param("vm"), "stopped"))
+
+		authenticated.GET("/vms", func(c *gin.Context) {
+			pageStr := c.DefaultQuery("page", "1")
+			page, err := strconv.Atoi(pageStr)
+			if err != nil || page < 1 {
+				page = 1
+			}
+
+			vms := retrieveVms(c)
+			data := NewTableData(vms, page)
+
+			c.HTML(http.StatusOK, "_table.html", data)
 		})
+
+		// POST /api/v1/vm/vms/:id/:action
+		authenticated.POST("/vms/:id/:action", func(c *gin.Context) {
+			id := c.Param("id")
+			action := c.Param("action")
+			slog.Info("POST requested", "id", id, "action", action)
+
+			vms := retrieveVms(c)
+			data := NewTableData(vms, 1)
+
+			c.HTML(http.StatusOK, "_table.html", data)
+		})
+
+		authenticated.POST("/logout", func(c *gin.Context) {
+			slog.Debug(("LOGOUT"))
+			c.Header("HX-Redirect", "/")
+			session := sessions.Default(c)
+			if username := session.Get("username"); username != nil {
+				slog.Debug("logging out user...", "username", username)
+				session.Clear()
+				session.Save()
+			}
+			c.Redirect(http.StatusFound, "/api/v1/auth/login")
+		})
+
 	}
 
 	// /login
@@ -179,4 +213,76 @@ func (cmd *Portal) Execute(args []string) error {
 		return fmt.Errorf("portal and API server failed: %w", err)
 	}
 	return nil
+}
+
+type TableData struct {
+	Records      []*VM
+	Page         int
+	TotalPages   int
+	TotalRecords int
+	PrevPage     int
+	NextPage     int
+	Pages        []int
+}
+
+func NewTableData(vms []*VM, page int) *TableData {
+
+	td := &TableData{}
+	return td.Paginate(vms, page)
+
+}
+
+const pageSize = 20
+
+func (t *TableData) Paginate(vms []*VM, page int) *TableData {
+	total := len(vms)
+	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
+	if page < 1 {
+		page = 1
+	}
+	if page > totalPages {
+		page = totalPages
+	}
+
+	start := (page - 1) * pageSize
+	end := start + pageSize
+	if end > total {
+		end = total
+	}
+
+	// Build page number slice
+	pages := make([]int, totalPages)
+	for i := range pages {
+		pages[i] = i + 1
+	}
+
+	prev := page - 1
+	if prev < 1 {
+		prev = 1
+	}
+	next := page + 1
+	if next > totalPages {
+		next = totalPages
+	}
+
+	t.Records = vms[start:end]
+	t.Page = page
+	t.TotalPages = totalPages
+	t.TotalRecords = total
+	t.PrevPage = prev
+	t.NextPage = next
+	t.Pages = pages
+
+	return t
+}
+
+func retrieveVms(c *gin.Context) []*VM {
+	vms := []*VM{
+		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm001", "running"),
+		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm002", "stopped"),
+		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm003", "running"),
+		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm004", "paused"),
+		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm005", "shelved"),
+	}
+	return vms
 }

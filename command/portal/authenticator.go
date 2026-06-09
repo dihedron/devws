@@ -40,7 +40,7 @@ func WithUser(username, password string) func(*StaticAuthenticator) {
 
 func (a *StaticAuthenticator) Authenticate(username, password string) (bool, error) {
 	if pass, exists := a.accounts[username]; exists {
-		slog.Debug("user successfuilly authenticated", "username", username, "password", password)
+		slog.Debug("user successfully authenticated", "username", username, "password", password)
 		return pass == password, nil
 	}
 	slog.Debug("error authenticating user", "username", username)

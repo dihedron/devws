@@ -67,6 +67,6 @@ func SessionAuthMiddleware(realm string, authenticator Authenticator) gin.Handle
 		// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 		// 	"error": "Unauthorized. Please provide valid credentials.",
 		// })
-		c.Redirect(http.StatusFound, "/login")
+		c.Redirect(http.StatusFound, "/api/v1/auth/login")
 	}
 }

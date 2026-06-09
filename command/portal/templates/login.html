@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161a22;
+      --border:    #2a2f3d;
+      --accent:    #4ade80;
+      --accent-dim:#1f4a2e;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Sans', sans-serif;
+      color: var(--text);
+    }
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2.5rem;
+      position: relative;
+    }
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 4px 4px 0 0;
+    }
+    .brand {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .form-label {
+      font-size: 0.75rem;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+    .form-control {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 2px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9rem;
+      padding: 0.6rem 0.85rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus {
+      background: var(--bg);
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: 0 0 0 3px rgba(74,222,128,0.12);
+    }
+    .btn-login {
+      width: 100%;
+      background: var(--accent);
+      color: #0d0f14;
+      border: none;
+      border-radius: 2px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.7rem;
+      margin-top: 0.5rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-login:hover { opacity: 0.88; }
+    .btn-login:active { transform: scale(0.98); }
+    .btn-login[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .htmx-indicator {
+      display: none;
+    }
+    .htmx-request .htmx-indicator { display: inline; }
+    .htmx-request.btn-login { opacity: 0.6; }
+    #login-error {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="brand">// ADMIN PANEL</div>
+    <div class="subtitle">Domain credentials authentication</div>
+ 
+    <div id="login-error"></div>
+ 
+    <form
+      hx-post="/api/v1/auth/login"
+      hx-target="#login-error"
+      hx-swap="innerHTML"
+      hx-indicator=".btn-login"
+    >
+      <div class="mb-3">
+        <label class="form-label" for="username">Username</label>
+        <input
+          type="text"
+          class="form-control"
+          id="username"
+          name="username"
+          autocomplete="username"
+          required
+          placeholder="admin"
+        />
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="password">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          name="password"
+          autocomplete="current-password"
+          required
+          placeholder="••••••••"
+        />
+      </div>
+      <button type="submit" class="btn-login">
+        <span class="htmx-indicator">...</span>
+        <span>Accedi</span>
+      </button>
+    </form>
+  </div>
+ 
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script>
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+      if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.requestPath === '/login') {
+        // redirect handled server-side via HX-Redirect header
+      }
+    });
+  </script>
+</body>
+</html>

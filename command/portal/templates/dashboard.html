@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161a22;
+      --surface2:  #1e2330;
+      --border:    #2a2f3d;
+      --accent:    #4ade80;
+      --accent-dim:#1f4a2e;
+      --red:       #f87171;
+      --yellow:    #fbbf24;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      min-height: 100vh;
+    }
+ 
+    /* ── NAVBAR ── */
+    .app-nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .app-nav .brand {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .user-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .user-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+    .btn-logout {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.35rem 0.9rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+ 
+    /* ── MAIN CONTENT ── */
+    .main-content { padding: 2rem; }
+    .page-header {
+      margin-bottom: 1.75rem;
+    }
+    .page-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 0.15rem;
+    }
+    .page-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+ 
+    /* ── TABLE CARD ── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .table-card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-card-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .record-count {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+ 
+    /* ── TABLE ── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table thead tr {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table th {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding: 0.7rem 1.25rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .data-table tbody tr { transition: background 0.15s; }
+    .data-table tbody tr:hover { background: var(--surface2); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+ 
+    .badge-status {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-running   { background: var(--accent-dim); color: var(--accent); }
+    .badge-stopped { background: #2d1f1f; color: var(--red); }
+    .badge-inactive  { background: #2d2410; color: var(--gray); }
+ 
+    .btn-action {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.25rem 0.65rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      margin-right: 0.3rem;
+    }
+    .btn-action:hover        { border-color: var(--accent); color: var(--accent); }
+    .btn-action.btn-danger:hover { border-color: var(--red); color: var(--red); }
+ 
+    /* ── PAGINATION ── */
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.25rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .pagination-info {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .pagination-controls { display: flex; gap: 0.3rem; }
+    .page-btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.28rem 0.65rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .page-btn:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+    .page-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
+ 
+    /* ── HTMX loading ── */
+    #table-container { position: relative; }
+    .htmx-indicator-overlay {
+      display: none;
+      position: absolute; inset: 0;
+      background: rgba(13,15,20,0.5);
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+    .htmx-request .htmx-indicator-overlay { display: flex; }
+ 
+    /* ── MODAL ── */
+    .modal-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+    }
+    .modal-header {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+    }
+    .modal-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+    .modal-body {
+      padding: 1.25rem;
+      font-size: 0.875rem;
+    }
+    .modal-body .item-detail {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+    .modal-footer {
+      border-top: 1px solid var(--border);
+      padding: 0.9rem 1.25rem;
+      gap: 0.5rem;
+    }
+    .btn-cancel {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.45rem 1rem;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .btn-confirm {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      background: var(--red);
+      border: none;
+      color: #0d0f14;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-confirm:hover { opacity: 0.85; }
+    .btn-close { filter: invert(1) opacity(0.4); }
+ 
+    /* ── TOAST ── */
+    #toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .app-toast {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      color: var(--text);
+      padding: 0.75rem 1rem;
+      border-radius: 2px;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+ 
+  <!-- NAVBAR -->
+  <nav class="app-nav">
+    <span class="brand">// VM ADMIN PANEL</span>
+    <div class="nav-right">
+      <div class="user-badge">
+        <span class="user-dot"></span>
+        {{.Username}}
+      </div>
+      <button class="btn-logout"
+        hx-post="/api/v1/vm/logout"
+        hx-target="body"
+        hx-swap="none">
+        Logout
+      </button>
+    </div>
+  </nav>
+ 
+  <!-- CONTENT -->
+  <div class="main-content">
+    <div class="page-header">
+      <div class="page-title">// Gestione Risorse</div>
+      <div class="page-sub">Developers virtual machines</div>
+    </div>
+ 
+    <div class="table-card">
+      <div class="table-card-header">
+        <span class="table-card-title">Elenco Record</span>
+        <span class="record-count" id="record-count"></span>
+      </div>
+ 
+      <div id="table-container">
+        <div class="htmx-indicator-overlay">caricamento...</div>
+        <div
+          hx-get="/api/v1/vm/vms?page=1"
+          hx-trigger="load"
+          hx-target="#table-container"
+          hx-swap="innerHTML"
+          hx-indicator="#table-container"
+        ></div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- MODAL CONFERMA -->
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmModalLabel">Conferma Operazione</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-message">Sei sicuro di voler procedere?</div>
+          <div class="item-detail" id="modal-detail"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" data-bs-dismiss="modal">Annulla</button>
+          <button type="button" class="btn-confirm" id="modal-confirm-btn">Conferma</button>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+ 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script>
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    let pendingAction = null;
+ 
+    // Open confirm modal from table rows
+    function openConfirm(action, id, name) {
+      const messages = {
+        stop:    `Interrompere l'esecuzione della risorsa selezionata?`,
+        start:   `Avviare la risorsa selezionata?`,
+        restart: `Riavviare la risorsa selezionata?`,
+        pause:   `Mettere in pausa la risorsa selezionata?`,
+        unpause: `Riattivare la risorsa selezionata?`,
+        shelve:   `Effettuare "Shelve" della risorsa selezionata?`,
+        unshelf: `Effettuare "Unshelve" della risorsa selezionata?`,
+      };
+      document.getElementById('modal-message').textContent = messages[action] || 'Confermare l\'operazione?';
+      document.getElementById('modal-detail').textContent  = `ID: ${id}  |  Nome: ${name}`;
+      
+      switch (action) {
+      case "stop":
+        document.getElementById('confirmModalLabel').textContent = '// Stop VM';
+        console.log(action);
+        break;
+      case "start":
+        document.getElementById('confirmModalLabel').textContent = '// Start VM';
+        console.log(action);
+        break;
+      case "shelve":
+        document.getElementById('confirmModalLabel').textContent = '// Shelve VM';
+        console.log(action);
+        break;
+      case "restart":
+        document.getElementById('confirmModalLabel').textContent = '// Restart VM';
+        console.log(action);
+        break;
+      case "pause":
+        document.getElementById('confirmModalLabel').textContent = '// Pause VM';
+        console.log(action);
+        break;
+      case "unpause":
+        document.getElementById('confirmModalLabel').textContent = '// Unpause VM';
+        console.log(action);
+        break;
+      case "unshelve":
+        document.getElementById('confirmModalLabel').textContent = '// Unshelve VM';
+        console.log(action);
+        break;
+      default:
+        console.log(`Sorry, action ${action} unkwnown.`);
+      }
+      pendingAction = { action, id, name };
+      confirmModal.show();
+    }
+ 
+    document.getElementById('modal-confirm-btn').addEventListener('click', function() {
+      if (!pendingAction) return;
+      confirmModal.hide();
+      htmx.ajax('POST', `/api/v1/vm/vms/${pendingAction.id}/${pendingAction.action}`, {
+        target: '#table-container',
+        swap: 'innerHTML'
+      });
+      showToast(`Operazione eseguita su: ${pendingAction.name}`);
+      pendingAction = null;
+    });
+ 
+    // Logout redirect
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+      if (evt.detail.pathInfo.requestPath === '/api/v1/vm/logout') {
+        window.location.href = '/';
+      }
+    });
+ 
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'app-toast';
+      t.textContent = '✓ ' + msg;
+      document.getElementById('toast-container').appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+  </script>
+</body>
+</html>
