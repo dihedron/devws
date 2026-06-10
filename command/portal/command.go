@@ -84,15 +84,22 @@ func (cmd *Portal) Execute(args []string) error {
 	slog.Info("starting portal and API server", "address", cmd.Address)
 
 	var openstackService service.OpenstackServiceI
+	var authenticator Authenticator
 	var err error
-	mock, found := os.LookupEnv("MOCK_OS_SERVICES")
+	mock, found := os.LookupEnv("MOCK_SERVICES")
 	if found {
 		if mock == "y" {
+			// define an authenticator
+			authenticator = NewStaticAuthenticator(
+				WithUser("admin", "QWERTY"),
+				WithUser("developer", "QWERTY"),
+			)
 			openstackService, err = service.NewOpenstackMockService(context.Background())
 		} else {
-			err = fmt.Errorf("env variable MOCK_OS_SERVICES must be 'y'")
+			err = fmt.Errorf("env variable MOCK_SERVICES must be 'y'")
 		}
 	} else {
+		authenticator, err = NewLDAPAuthenticatorFromEnvs()
 		openstackService, err = service.NewOpenstackService(context.Background())
 	}
 
@@ -121,12 +128,6 @@ func (cmd *Portal) Execute(args []string) error {
 	// router.LoadHTMLGlob("command/portal/assets/*.html")
 	router.LoadHTMLGlob("command/portal/templates/*.html")
 
-	// define an authenticator
-	authenticator := NewStaticAuthenticator(
-		WithUser("admin", "QWERTY"),
-		WithUser("developer", "QWERTY"),
-	)
-
 	unauthenticated := router.Group("")
 	{
 		unauthenticated.StaticFile("/favicon.ico", "./command/server/assets/favicon.ico")
@@ -154,10 +155,10 @@ func (cmd *Portal) Execute(args []string) error {
 			slog.Debug("logging out user first...", "username", username)
 			session := sessions.Default(c)
 			if u := session.Get("username"); u == username {
-				slog.Debug("user already logged in, redirectong to main page")
+				slog.Debug("user already logged in, redirecting to main page")
 				c.Redirect(http.StatusFound, "/api/v1/vm")
 			} else {
-				slog.Debug("logging in user...", "username", username, "password", password)
+				slog.Debug("logging in user...", "username", username, "password", "*******")
 				if ok, err := authenticator.Authenticate(username, password); ok {
 					slog.Info("user successfully logged in", "username", username)
 					session.Set("username", username)
@@ -165,7 +166,7 @@ func (cmd *Portal) Execute(args []string) error {
 					c.Redirect(http.StatusFound, "/api/v1/vm")
 					return
 				} else {
-					slog.Error("failed to autheticate user", "username", username, "error", err)
+					slog.Error("failed to authenticate user", "username", username, "error", err)
 				}
 				c.Redirect(http.StatusFound, "/api/v1/auth/login")
 			}
