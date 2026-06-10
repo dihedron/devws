@@ -1,5 +1,5 @@
 <!-- Partial: _table.html — rendered by /api/v1/vm/vms -->
-<div class="htmx-indicator-overlay">caricamento...</div>
+<div class="htmx-indicator-overlay">loading...</div>
 
 <table class="data-table">
   <thead>
@@ -10,7 +10,7 @@
       <th>Status</th>
       <th>Address</th>
       <th>Attached Volumes</th>
-      <th>Azioni</th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -18,8 +18,8 @@
     <tr>
       <!-- <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.ID}}</td> -->
       <td>
-        <button class="btn-action "
-          onclick="openConfirm('detail', '{{.ID}}', '{{.Name}}')">
+        <button class="btn-action ">
+          <!-- onclick="openConfirm('detail', '{{.ID}}', '{{.Name}}')" -->
           {{.ID}}
         </button>
       </td>
@@ -44,8 +44,21 @@
           <span class="badge-status badge-unkwown"></span>
         {{end}}
       </td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.Addresses}}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.AttachedVolumes}}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">
+        {{range $key, $val := .Addresses}}
+          <button class="btn-action">
+          {{$key}}
+          </button>
+          {{range $val}}
+            IP Address: {{.IPAddress}}
+          {{end}}
+        {{end}}
+      </td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">
+        {{range .AttachedVolumes}}
+          <button class="btn-action">{{.ID}}</button>
+        {{end}}
+      </td>
       <td>
         {{if eq .Status "ACTIVE"}}
           <button class="btn-action"

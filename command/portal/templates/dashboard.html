@@ -339,18 +339,18 @@
   <!-- CONTENT -->
   <div class="main-content">
     <div class="page-header">
-      <div class="page-title">// Gestione Risorse</div>
+      <div class="page-title">// Resource Management</div>
       <div class="page-sub">Developers virtual machines</div>
     </div>
  
     <div class="table-card">
       <div class="table-card-header">
-        <span class="table-card-title">Elenco Record</span>
+        <span class="table-card-title">VM List</span>
         <span class="record-count" id="record-count"></span>
       </div>
  
       <div id="table-container">
-        <div class="htmx-indicator-overlay">caricamento...</div>
+        <div class="htmx-indicator-overlay">loading...</div>
         <div
           hx-get="/api/v1/vm/vms?page=1"
           hx-trigger="load"

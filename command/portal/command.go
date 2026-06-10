@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 	"text/template"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 )
 
 type Portal struct {
@@ -81,7 +83,19 @@ func NewVM(base string, id string, status string) *VM {
 func (cmd *Portal) Execute(args []string) error {
 	slog.Info("starting portal and API server", "address", cmd.Address)
 
-	openstackService, err := service.NewOpenstackMockService(context.Background())
+	var openstackService service.OpenstackServiceI
+	var err error
+	mock, found := os.LookupEnv("MOCK_OS_SERVICES")
+	if found {
+		if mock == "y" {
+			openstackService, err = service.NewOpenstackMockService(context.Background())
+		} else {
+			err = fmt.Errorf("env variable MOCK_OS_SERVICES must be 'y'")
+		}
+	} else {
+		openstackService, err = service.NewOpenstackService(context.Background())
+	}
+
 	if err != nil {
 		slog.Error("Unable to use openstack service", "error", err.Error())
 	}
@@ -193,6 +207,24 @@ func (cmd *Portal) Execute(args []string) error {
 			action := c.Param("action")
 			slog.Info("POST requested", "id", id, "action", action)
 
+			switch action {
+			case "stop":
+				slog.Debug("stop requested", "id", id)
+				openstackService.Stop(context.Background(), id)
+			case "start":
+				slog.Debug("start requested", "id", id)
+				openstackService.Start(context.Background(), id)
+			case "reboot":
+				slog.Debug("reboot requested", "id", id)
+				openstackService.Reboot(context.Background(), id, servers.HardReboot)
+			case "shelve":
+				slog.Debug("shelve requested", "id", id)
+				openstackService.Shelve(context.Background(), id, false)
+			case "unshelve":
+				slog.Debug("unshelve requested", "id", id)
+				openstackService.Unshelve(context.Background(), id, "cdm")
+			}
+
 			options := []openstack.ComputeV2ListOption{}
 			vms, _ := openstackService.List(context.Background(), options)
 			data := NewTableData(vms, 1)
@@ -286,15 +318,4 @@ func (t *TableData) Paginate(vms []openstack.Workstation, page int) *TableData {
 	t.Pages = pages
 
 	return t
-}
-
-func retrieveVms(c *gin.Context) []*VM {
-	vms := []*VM{
-		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm001", "running"),
-		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm002", "stopped"),
-		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm003", "running"),
-		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm004", "paused"),
-		NewVM("http://"+c.Request.Host+"/api/v1/vm", "vm005", "shelved"),
-	}
-	return vms
 }
