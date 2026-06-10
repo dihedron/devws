@@ -183,6 +183,7 @@
     }
     .btn-action:hover        { border-color: var(--accent); color: var(--accent); }
     .btn-action.btn-danger:hover { border-color: var(--red); color: var(--red); }
+    .btn-action.btn-warning:hover { border-color: var(--orange); color: var(--orange); }
  
     /* ── PAGINATION ── */
     .pagination-bar {
@@ -417,16 +418,8 @@
         document.getElementById('confirmModalLabel').textContent = '// Shelve VM';
         console.log(action);
         break;
-      case "restart":
-        document.getElementById('confirmModalLabel').textContent = '// Restart VM';
-        console.log(action);
-        break;
-      case "pause":
-        document.getElementById('confirmModalLabel').textContent = '// Pause VM';
-        console.log(action);
-        break;
-      case "unpause":
-        document.getElementById('confirmModalLabel').textContent = '// Unpause VM';
+      case "reboot":
+        document.getElementById('confirmModalLabel').textContent = '// Reboot VM';
         console.log(action);
         break;
       case "unshelve":

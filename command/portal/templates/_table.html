@@ -5,8 +5,12 @@
   <thead>
     <tr>
       <th>ID</th>
+      <th>UserID</th>
+      <th>Name</th>
       <th>Status</th>
-      <th style="width:1%;white-space:nowrap">Azioni</th>
+      <th>Address</th>
+      <th>Attached Volumes</th>
+      <th>Azioni</th>
     </tr>
   </thead>
   <tbody>
@@ -15,61 +19,61 @@
       <!-- <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.ID}}</td> -->
       <td>
         <button class="btn-action "
-          onclick="openConfirm('detail', '{{.ID}}', '{{.Links.Self}}')">
+          onclick="openConfirm('detail', '{{.ID}}', '{{.Name}}')">
           {{.ID}}
         </button>
       </td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)" title="{{.UserID}}">
+        {{if gt (len .UserID) 10}}
+          {{slice .UserID 0 10}}...
+        {{else}}
+            {{.UserID}}
+        {{end}}
+      </td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.Name}}</td>
       <td>
-        {{if eq .Status "running"}}
-          <span class="badge-status badge-running">running</span>
-        {{else if eq .Status "stopped"}}
-          <span class="badge-status badge-stopped">stopped</span>
-        {{else if eq .Status "paused"}}
-          <span class="badge-status badge-inactive">paused</span>
-        {{else if eq .Status "shelved"}}
-          <span class="badge-status badge-inactive">shelved</span>
+        {{if eq .Status "ACTIVE"}}
+          <span class="badge-status badge-running">ACTIVE</span>
+        {{else if eq .Status "STOPPED"}}
+          <span class="badge-status badge-stopped">STOPPED</span>
+        {{else if eq .Status "PAUSED"}}
+          <span class="badge-status badge-inactive">PAUSED</span>
+        {{else if eq .Status "SHELVED"}}
+          <span class="badge-status badge-inactive">SHELVED</span>
         {{else}}
           <span class="badge-status badge-unkwown"></span>
         {{end}}
       </td>
-      <td style="width:1%;white-space:nowrap">
-        {{if eq .Status "running"}}
-          <button class="btn-action btn-danger"
-            onclick="openConfirm('pause', '{{.ID}}', '{{.Links.Pause}}')">
-            pause
-          </button>
-          <button class="btn-action btn-danger"
-            onclick="openConfirm('shelve', '{{.ID}}', '{{.Links.Shelve}}')">
-            shelve
-          </button>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.Addresses}}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.AttachedVolumes}}</td>
+      <td>
+        {{if eq .Status "ACTIVE"}}
           <button class="btn-action"
-            onclick="openConfirm('restart', '{{.ID}}', '{{.Links.Restart}}')">
-            restart
+            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
+            reboot
           </button>
           <button class="btn-action btn-danger"
-            onclick="openConfirm('stop', '{{.ID}}', '{{.Links.Stop}}')">
+            onclick="openConfirm('stop', '{{.ID}}', '{{.Name}}')">
             stop
+          </button>
+          <button class="btn-action btn-warning"
+            onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}')">
+            shelve
           </button>
         {{end}}
         {{if eq .Status "stopped"}}
           <button class="btn-action"
-            onclick="openConfirm('start', '{{.ID}}', '{{.Links.Start}}')">
+            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}')">
             start
           </button>
           <button class="btn-action btn-danger"
-            onclick="openConfirm('shelve', '{{.ID}}', '{{.Links.Shelve}}')">
+            onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}')">
             shelve
           </button>
         {{end}}
-        {{if eq .Status "paused"}}
-          <button class="btn-action "
-            onclick="openConfirm('unpause', '{{.ID}}', '{{.Links.Unpause}}')">
-            unpause
-          </button>
-        {{end}}
         {{if eq .Status "shelved"}}
-          <button class="btn-action "
-            onclick="openConfirm('unshelve', '{{.ID}}', '{{.Links.Unshelve}}')">
+          <button class="btn-action btn-warning"
+            onclick="openConfirm('unshelve', '{{.ID}}', '{{.Name}}')">
             unshelve
           </button>
         {{end}}

@@ -1,6 +1,7 @@
 package portal
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -10,6 +11,8 @@ import (
 	"text/template"
 
 	"github.com/dihedron/devws/command/base"
+	"github.com/dihedron/devws/internal/service"
+	"github.com/dihedron/devws/openstack"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -78,6 +81,11 @@ func NewVM(base string, id string, status string) *VM {
 func (cmd *Portal) Execute(args []string) error {
 	slog.Info("starting portal and API server", "address", cmd.Address)
 
+	openstackService, err := service.NewOpenstackMockService(context.Background())
+	if err != nil {
+		slog.Error("Unable to use openstack service", "error", err.Error())
+	}
+
 	router := gin.New()
 	router.SetTrustedProxies(nil)
 
@@ -96,7 +104,7 @@ func (cmd *Portal) Execute(args []string) error {
 	)
 
 	router.SetFuncMap(template.FuncMap{})
-	router.LoadHTMLGlob("command/portal/assets/*.html")
+	// router.LoadHTMLGlob("command/portal/assets/*.html")
 	router.LoadHTMLGlob("command/portal/templates/*.html")
 
 	// define an authenticator
@@ -170,7 +178,10 @@ func (cmd *Portal) Execute(args []string) error {
 				page = 1
 			}
 
-			vms := retrieveVms(c)
+			options := []openstack.ComputeV2ListOption{}
+			vms, err := openstackService.List(context.Background(), options)
+
+			// vms := retrieveVms(c)
 			data := NewTableData(vms, page)
 
 			c.HTML(http.StatusOK, "_table.html", data)
@@ -182,7 +193,8 @@ func (cmd *Portal) Execute(args []string) error {
 			action := c.Param("action")
 			slog.Info("POST requested", "id", id, "action", action)
 
-			vms := retrieveVms(c)
+			options := []openstack.ComputeV2ListOption{}
+			vms, _ := openstackService.List(context.Background(), options)
 			data := NewTableData(vms, 1)
 
 			c.HTML(http.StatusOK, "_table.html", data)
@@ -207,7 +219,7 @@ func (cmd *Portal) Execute(args []string) error {
 	// https://github.com/puikinsh/login-forms/tree/main/forms/material
 
 	slog.Info("portal and API server running", "address", cmd.Address)
-	err := router.Run(cmd.Address)
+	err = router.Run(cmd.Address)
 	if err != nil {
 		slog.Error("portal and API server failed", "error", err)
 		return fmt.Errorf("portal and API server failed: %w", err)
@@ -216,7 +228,7 @@ func (cmd *Portal) Execute(args []string) error {
 }
 
 type TableData struct {
-	Records      []*VM
+	Records      []openstack.Workstation
 	Page         int
 	TotalPages   int
 	TotalRecords int
@@ -225,16 +237,16 @@ type TableData struct {
 	Pages        []int
 }
 
-func NewTableData(vms []*VM, page int) *TableData {
+func NewTableData(vms []openstack.Workstation, page int) *TableData {
 
 	td := &TableData{}
 	return td.Paginate(vms, page)
 
 }
 
-const pageSize = 20
+const pageSize = 10
 
-func (t *TableData) Paginate(vms []*VM, page int) *TableData {
+func (t *TableData) Paginate(vms []openstack.Workstation, page int) *TableData {
 	total := len(vms)
 	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
 	if page < 1 {
