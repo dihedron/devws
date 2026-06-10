@@ -9,7 +9,7 @@
       <th>Name</th>
       <th>Status</th>
       <th>Address</th>
-      <th>Attached Volumes</th>
+      <th>Image</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -46,18 +46,26 @@
       </td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">
         {{range $key, $val := .Addresses}}
-          <button class="btn-action">
+          <!-- <button class="btn-action">
           {{$key}}
-          </button>
+          </button> -->
           {{range $val}}
             IP Address: {{.IPAddress}}
           {{end}}
         {{end}}
       </td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">
-        {{range .AttachedVolumes}}
-          <button class="btn-action">{{.ID}}</button>
+        {{range $key, $val := .Metadata}}
+            {{ if eq $key "vm::image::name"}}
+              {{$val}}
+            {{end}}
+            {{ if eq $key "vm::image::version"}}
+              v{{$val}}
+            {{end}}
         {{end}}
+        <!-- {{range .AttachedVolumes}}
+          <button class="btn-action">{{.ID}}</button>
+        {{end}} -->
       </td>
       <td>
         {{if eq .Status "ACTIVE"}}

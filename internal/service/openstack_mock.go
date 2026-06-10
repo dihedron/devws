@@ -22,7 +22,55 @@ func NewOpenstackMockService(ctx context.Context) (*OpenstackMockService, error)
 
 func (o *OpenstackMockService) List(ctx context.Context, options []openstack.ComputeV2ListOption) ([]openstack.Workstation, error) {
 	slog.Info("List", "options", options)
-	return readOpenstackData(), nil
+	list := readOpenstackData()
+	listOpts := servers.ListOpts{}
+	for _, option := range options {
+		option(&listOpts)
+	}
+
+	filtered := []openstack.Workstation{}
+	isFiltered := false
+	for _, l := range list {
+
+		if listOpts.Name != "" {
+			isFiltered = true
+			if l.Name == listOpts.Name {
+				filtered = append(filtered, l)
+			}
+		}
+		if listOpts.UserID != "" {
+			isFiltered = true
+			if l.UserID == listOpts.UserID {
+				filtered = append(filtered, l)
+			}
+		}
+		if listOpts.Tags != "" {
+			isFiltered = true
+			for _, t := range *l.Tags {
+				if t == listOpts.Tags {
+					filtered = append(filtered, l)
+				}
+			}
+
+		}
+		if listOpts.Image != "" {
+			isFiltered = true
+			if l.Image == listOpts.Image {
+				filtered = append(filtered, l)
+			}
+		}
+		if listOpts.Status != "" {
+			isFiltered = true
+			if l.Status == listOpts.Status {
+				filtered = append(filtered, l)
+			}
+		}
+	}
+	if isFiltered {
+		slog.Debug(("FILTRATO"))
+		return filtered, nil
+	}
+	return list, nil
 }
 
 func (o *OpenstackMockService) GetId(ctx context.Context, workstationNameOrID string) (string, error) {

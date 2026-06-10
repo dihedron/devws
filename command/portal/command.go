@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/dihedron/devws/command/base"
@@ -95,8 +96,11 @@ func (cmd *Portal) Execute(args []string) error {
 				WithUser("developer", "QWERTY"),
 			)
 			openstackService, err = service.NewOpenstackMockService(context.Background())
+		} else if mock == "n" {
+			authenticator, err = NewLDAPAuthenticatorFromEnvs()
+			openstackService, err = service.NewOpenstackService(context.Background())
 		} else {
-			err = fmt.Errorf("env variable MOCK_SERVICES must be 'y'")
+			err = fmt.Errorf("env variable MOCK_SERVICES must be 'y' or 'n'")
 		}
 	} else {
 		authenticator, err = NewLDAPAuthenticatorFromEnvs()
@@ -193,7 +197,30 @@ func (cmd *Portal) Execute(args []string) error {
 				page = 1
 			}
 
+			// Filters
+			filterName := strings.ToLower(c.Query("name"))
+			filterOwner := c.Query("owner")
+			filterUserid := c.Query("userid")
+			filterImage := c.Query("image")
+			filterStatus := c.Query("status")
+
 			options := []openstack.ComputeV2ListOption{}
+			if filterName != "" {
+				options = append(options, openstack.WithName(filterName))
+			}
+			if filterOwner != "" {
+				options = append(options, openstack.WithTags(fmt.Sprintf("devws.owner=%s", filterOwner)))
+			}
+			if filterUserid != "" {
+				options = append(options, openstack.WithUserID(filterUserid))
+			}
+			if filterImage != "" {
+				options = append(options, openstack.WithImage(filterImage))
+			}
+			if filterStatus != "" {
+				options = append(options, openstack.WithStatus(filterStatus))
+			}
+
 			vms, err := openstackService.List(context.Background(), options)
 
 			// vms := retrieveVms(c)
@@ -310,7 +337,11 @@ func (t *TableData) Paginate(vms []openstack.Workstation, page int) *TableData {
 		next = totalPages
 	}
 
-	t.Records = vms[start:end]
+	if total > 0 {
+		t.Records = vms[start:end]
+	} else {
+		t.Records = vms
+	}
 	t.Page = page
 	t.TotalPages = totalPages
 	t.TotalRecords = total

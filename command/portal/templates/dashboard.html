@@ -289,6 +289,142 @@
     }
     .btn-confirm:hover { opacity: 0.85; }
     .btn-close { filter: invert(1) opacity(0.4); }
+
+        /* ── FILTER PANEL ── */
+    .filter-panel {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 1.25rem;
+    }
+    .filter-panel.open {
+      max-height: 200px;
+      padding: 1.1rem 1.25rem;
+    }
+    .filter-panel .form-label {
+      font-size: 0.7rem;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.3rem;
+      display: block;
+    }
+    .filter-panel .form-control,
+    .filter-panel .form-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 2px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82rem;
+      padding: 0.4rem 0.7rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .filter-panel .form-control:focus,
+    .filter-panel .form-select:focus {
+      background: var(--bg);
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: 0 0 0 3px rgba(74,222,128,0.10);
+    }
+    .filter-panel .form-select option { background: var(--surface); }
+    /* checkbox */
+    .filter-panel .form-check-input {
+      background-color: var(--bg);
+      border-color: var(--border);
+      border-radius: 2px;
+    }
+    .filter-panel .form-check-input:checked {
+      background-color: var(--accent);
+      border-color: var(--accent);
+    }
+    .filter-panel .form-check-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    /* switch */
+    .filter-panel .form-switch .form-check-input {
+      border-radius: 10px;
+    }
+    .filter-panel .form-switch .form-check-input:checked {
+      background-color: var(--accent);
+      border-color: var(--accent);
+    }
+    /* buttons row */
+    .filter-actions { display: flex; gap: 0.5rem; align-items: flex-end; padding-bottom: 0.1rem; }
+    .btn-filter-apply {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.38rem 0.9rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-filter-apply:hover { background: var(--accent); color: #0d0f14; }
+    .btn-filter-reset {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.38rem 0.9rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .btn-filter-reset:hover { border-color: var(--muted); color: var(--text); }
+    /* toggle button in header */
+    .btn-filter-toggle {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.32rem 0.8rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-filter-toggle:hover,
+    .btn-filter-toggle.active { border-color: var(--accent); color: var(--accent); }
+    .btn-filter-toggle .arrow {
+      display: inline-block;
+      transition: transform 0.25s;
+      font-size: 0.65rem;
+    }
+    .btn-filter-toggle.active .arrow { transform: rotate(180deg); }
+    /* active filters badge */
+    .filter-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: #0d0f14;
+      font-size: 0.6rem;
+      font-weight: 700;
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      margin-left: 0.1rem;
+    }
+
  
     /* ── TOAST ── */
     #toast-container {
@@ -346,7 +482,78 @@
     <div class="table-card">
       <div class="table-card-header">
         <span class="table-card-title">VM List</span>
-        <span class="record-count" id="record-count"></span>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <button class="btn-filter-toggle" id="filter-toggle-btn" onclick="toggleFilters()">
+            ⚙ Filters <span class="arrow">▼</span>
+            <span class="filter-badge" id="filter-badge" style="display:none">0</span>
+          </button>
+        </div>
+      </div>
+ 
+      <!-- FILTER PANEL -->
+      <div class="filter-panel" id="filter-panel">
+        <div class="row g-3 align-items-end">
+ 
+          <!-- TEXT INPUT: ricerca per nome o id -->
+          <div class="col-md-2">
+            <label class="form-label" for="f-name">Name or Id</label>
+            <input type="text" class="form-control" id="f-name" placeholder="Search by name or Id…"/>
+          </div>
+          
+          <!-- TEXT INPUT: ricerca per owner -->
+          <div class="col-md-2">
+            <label class="form-label" for="f-owner">Owner</label>
+            <input type="text" class="form-control" id="f-owner" placeholder="Search by owner…"/>
+          </div>
+          
+          <!-- TEXT INPUT: ricerca per userid -->
+          <div class="col-md-2">
+            <label class="form-label" for="f-userid">UserId</label>
+            <input type="text" class="form-control" id="f-userid" placeholder="Search by userId"/>
+          </div>
+ 
+          <!-- TEXT INPUT: ricerca per image -->
+          <div class="col-md-3">
+            <label class="form-label" for="f-image">Image</label>
+            <input type="text" class="form-control" id="f-image" placeholder="Search by image"/>
+          </div>
+ 
+          <!-- DROPDOWN: status -->
+          <div class="col-md-1">
+            <label class="form-label" for="f-status">Status</label>
+            <select class="form-select" id="f-status">
+              <option value="">All</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="STOPPED">STOPPED</option>
+              <option value="SHELVED">SHELVED</option>
+            </select>
+          </div>
+ 
+          <!-- CHECKBOX: solo attivi -->
+          <!-- <div class="col-md-1 d-flex flex-column justify-content-end">
+            <label class="form-label" style="visibility:hidden">_</label>
+            <div class="form-check mb-1">
+              <input class="form-check-input" type="checkbox" id="f-active"/>
+              <label class="form-check-label" for="f-active">Only active</label>
+            </div>
+          </div> -->
+ 
+          <!-- SWITCH: include inattivi -->
+          <!-- <div class="col-md-1 d-flex flex-column justify-content-end">
+            <label class="form-label" style="visibility:hidden">_</label>
+            <div class="form-check form-switch mb-1">
+              <input class="form-check-input" type="checkbox" role="switch" id="f-inactive"/>
+              <label class="form-check-label" for="f-inactive">Include inactive</label>
+            </div>
+          </div> -->
+ 
+          <!-- ACTIONS -->
+          <div class="col-md-2 filter-actions">
+            <button class="btn-filter-apply" onclick="applyFilters()">Apply</button>
+            <button class="btn-filter-reset" onclick="resetFilters()">Reset</button>
+          </div>
+ 
+        </div>
       </div>
  
       <div id="table-container">
@@ -394,15 +601,15 @@
     // Open confirm modal from table rows
     function openConfirm(action, id, name) {
       const messages = {
-        stop:    `Interrompere l'esecuzione della risorsa selezionata?`,
-        start:   `Avviare la risorsa selezionata?`,
-        restart: `Riavviare la risorsa selezionata?`,
-        pause:   `Mettere in pausa la risorsa selezionata?`,
-        unpause: `Riattivare la risorsa selezionata?`,
-        shelve:   `Effettuare "Shelve" della risorsa selezionata?`,
-        unshelf: `Effettuare "Unshelve" della risorsa selezionata?`,
+        stop: `Stop the selected resource?`,
+        start: `Start the selected resource?`,
+        restart: `Restart the selected resource?`,
+        pause: `Pause the selected resource?`,
+        unpause: `Resume the selected resource?`,
+        shelve: `Shelve the selected resource?`,
+        unshelve: `Unshelve the selected resource?`
       };
-      document.getElementById('modal-message').textContent = messages[action] || 'Confermare l\'operazione?';
+      document.getElementById('modal-message').textContent = messages[action] || 'Confirm operation?';
       document.getElementById('modal-detail').textContent  = `ID: ${id}  |  Nome: ${name}`;
       
       switch (action) {
@@ -440,7 +647,7 @@
         target: '#table-container',
         swap: 'innerHTML'
       });
-      showToast(`Operazione eseguita su: ${pendingAction.name}`);
+      showToast(`Operation executed on: ${pendingAction.name}`);
       pendingAction = null;
     });
  
@@ -458,6 +665,74 @@
       document.getElementById('toast-container').appendChild(t);
       setTimeout(() => t.remove(), 3500);
     }
+
+        // ── FILTER PANEL ──────────────────────────────────────────────────────────
+    function toggleFilters() {
+      const panel = document.getElementById('filter-panel');
+      const btn   = document.getElementById('filter-toggle-btn');
+      const open  = panel.classList.toggle('open');
+      btn.classList.toggle('active', open);
+    }
+ 
+    function getFilterParams() {
+      return new URLSearchParams({
+        page:     1,
+        name:     document.getElementById('f-name').value.trim(),
+        owner:    document.getElementById('f-owner').value.trim(),
+        userid:   document.getElementById('f-userid').value.trim(),
+        image:    document.getElementById('f-image').value.trim(),
+        status:   document.getElementById('f-status').value,
+        // active:   document.getElementById('f-active').checked   ? '1' : '',
+        // inactive: document.getElementById('f-inactive').checked ? '1' : '',
+      }).toString();
+    }
+ 
+    function applyFilters() {
+      updateFilterBadge();
+      htmx.ajax('GET', `/api/v1/vm/vms?${getFilterParams()}`, {
+        target: '#table-container',
+        swap:   'innerHTML',
+      });
+    }
+ 
+    function resetFilters() {
+      document.getElementById('f-name').value       = '';
+      document.getElementById('f-owner').value      = '';
+      document.getElementById('f-userid').value     = '';
+      document.getElementById('f-image').value      = '';
+      document.getElementById('f-status').value     = '';
+      // document.getElementById('f-active').checked   = false;
+      // document.getElementById('f-inactive').checked = false;
+      updateFilterBadge();
+      htmx.ajax('GET', '/api/v1/vm/vms?page=1', {
+        target: '#table-container',
+        swap:   'innerHTML',
+      });
+    }
+ 
+    function updateFilterBadge() {
+      let count = 0;
+      if (document.getElementById('f-name').value.trim())       count++;
+      if (document.getElementById('f-owner').value.trim())      count++;
+      if (document.getElementById('f-userid').value.trim())     count++;
+      if (document.getElementById('f-image').value.trim())      count++;
+      if (document.getElementById('f-status').value)            count++;
+      // if (document.getElementById('f-active').checked)          count++;
+      // if (document.getElementById('f-inactive').checked)        count++;
+      const badge = document.getElementById('filter-badge');
+      badge.style.display = count > 0 ? 'inline-flex' : 'none';
+      badge.textContent   = count;
+    }
+ 
+    // Live badge update on input change
+    ['f-name','f-owner','f-userid','f-image','f-status'].forEach(id => {
+      document.getElementById(id).addEventListener('change', updateFilterBadge);
+    });
+    document.getElementById('f-name').addEventListener('input', updateFilterBadge);
+    document.getElementById('f-owner').addEventListener('input', updateFilterBadge);
+    document.getElementById('f-userid').addEventListener('input', updateFilterBadge);
+    document.getElementById('f-image').addEventListener('input', updateFilterBadge);
+
   </script>
 </body>
 </html>
