@@ -3,6 +3,7 @@ module github.com/dihedron/devws
 go 1.26
 
 require (
+	github.com/dihedron/rawdata v1.0.3
 	github.com/gin-contrib/sessions v1.1.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-ldap/ldap/v3 v3.4.13

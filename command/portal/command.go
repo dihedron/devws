@@ -22,8 +22,8 @@ import (
 
 type Portal struct {
 	base.Command
-
-	Address string `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
+	Configuration *Configuration `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
+	Address       string         `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
 }
 
 type Link struct {
