@@ -3,6 +3,7 @@ module github.com/dihedron/devws
 go 1.26
 
 require (
+	github.com/dihedron/defaults v1.9.0
 	github.com/dihedron/rawdata v1.0.3
 	github.com/gin-contrib/sessions v1.1.0
 	github.com/gin-gonic/gin v1.12.0

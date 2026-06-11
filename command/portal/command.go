@@ -23,7 +23,7 @@ import (
 
 type Portal struct {
 	base.Command
-	Configuration *Configuration `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
+	Configuration *Configuration `short:"c" long:"configuration" description:"Path to the configuration file (prefixed by @)" default:"@devws.yaml"`
 	Address       string         `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
 }
 
