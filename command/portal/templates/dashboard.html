@@ -18,6 +18,8 @@
       --yellow:    #fbbf24;
       --text:      #e2e8f0;
       --muted:     #64748b;
+      --black:     #000000;
+      --gray:      #5c5a5a;
     }
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -165,7 +167,8 @@
     }
     .badge-running   { background: var(--accent-dim); color: var(--accent); }
     .badge-stopped { background: #2d1f1f; color: var(--red); }
-    .badge-inactive  { background: #2d2410; color: var(--gray); }
+    .badge-inactive  { background: #2d2410; color: var(--yellow); }
+    .badge-unknown  { background: #b18424; color: var(--black); }
  
     .btn-action {
       font-family: 'IBM Plex Mono', monospace;
@@ -526,6 +529,14 @@
               <option value="ACTIVE">ACTIVE</option>
               <option value="STOPPED">STOPPED</option>
               <option value="SHELVED">SHELVED</option>
+              <option value="INITIALIZED">INITIALIZED</option>
+              <option value="RESCUED">RESCUED</option>
+              <option value="PAUSED">PAUSED</option>
+              <option value="SUSPENDED">SUSPENDED</option>
+              <option value="SOFT_DELETED">SOFT_DELETED</option>
+              <option value="HARD_DELETED">HARD_DELETED</option>
+              <option value="RESIZED">RESIZED</option>
+              <option value="ERROR">ERROR</option>
             </select>
           </div>
  
