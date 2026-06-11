@@ -9,7 +9,7 @@
       <th>Name</th>
       <th>Status</th>
       <th>Address</th>
-      <th>Attached Volumes</th>
+      <th>Image</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -34,30 +34,38 @@
       <td>
         {{if eq .Status "ACTIVE"}}
           <span class="badge-status badge-running">ACTIVE</span>
-        {{else if eq .Status "STOPPED"}}
-          <span class="badge-status badge-stopped">STOPPED</span>
+        {{else if or (eq .Status "STOPPED") (eq .Status "ERROR")}}
+          <span class="badge-status badge-stopped">{{.Status}}</span>
         {{else if eq .Status "PAUSED"}}
           <span class="badge-status badge-inactive">PAUSED</span>
         {{else if eq .Status "SHELVED"}}
           <span class="badge-status badge-inactive">SHELVED</span>
         {{else}}
-          <span class="badge-status badge-unkwown"></span>
+          <span class="badge-status badge-unknown">{{.Status}}</span>
         {{end}}
       </td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">
         {{range $key, $val := .Addresses}}
-          <button class="btn-action">
+          <!-- <button class="btn-action">
           {{$key}}
-          </button>
+          </button> -->
           {{range $val}}
             IP Address: {{.IPAddress}}
           {{end}}
         {{end}}
       </td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">
-        {{range .AttachedVolumes}}
-          <button class="btn-action">{{.ID}}</button>
+        {{range $key, $val := .Metadata}}
+            {{ if eq $key "vm::image::name"}}
+              {{$val}}
+            {{end}}
+            {{ if eq $key "vm::image::version"}}
+              v{{$val}}
+            {{end}}
         {{end}}
+        <!-- {{range .AttachedVolumes}}
+          <button class="btn-action">{{.ID}}</button>
+        {{end}} -->
       </td>
       <td>
         {{if eq .Status "ACTIVE"}}
@@ -73,21 +81,29 @@
             onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}')">
             shelve
           </button>
-        {{end}}
-        {{if eq .Status "stopped"}}
+        {{else if or  (eq .Status "SOFT_DELETED") (eq .Status "HARD_DELETED") }}
           <button class="btn-action"
             onclick="openConfirm('start', '{{.ID}}', '{{.Name}}')">
             start
           </button>
-          <button class="btn-action btn-danger"
-            onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}')">
-            shelve
+        {{else if or (eq .Status "STOPPED") (eq .Status "ERROR")}}
+          <button class="btn-action"
+            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}')">
+            start
           </button>
-        {{end}}
-        {{if eq .Status "shelved"}}
+          <button class="btn-action"
+            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
+            reboot
+          </button>
+        {{else if eq .Status "SHELVED"}}
           <button class="btn-action btn-warning"
             onclick="openConfirm('unshelve', '{{.ID}}', '{{.Name}}')">
             unshelve
+          </button>
+        {{else if eq .Status "PAUSED"}}
+          <button class="btn-action"
+            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}')">
+            start
           </button>
         {{end}}
       </td>

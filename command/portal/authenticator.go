@@ -3,6 +3,9 @@ package portal
 import (
 	"fmt"
 	"log/slog"
+	"os"
+	"path"
+	"strings"
 
 	"github.com/go-ldap/ldap/v3"
 )
@@ -90,6 +93,21 @@ func NewLDAPAuthenticator(account, password, address, basedn string) (*LDAPAuthe
 		basedn:     basedn,
 		connection: connection,
 	}, nil
+}
+
+func NewLDAPAuthenticatorFromEnvs() (*LDAPAuthenticator, error) {
+
+	app_prefix := strings.ReplaceAll(strings.ToUpper(path.Base(os.Args[0])), "-", "_")
+	address, okAdd := os.LookupEnv(fmt.Sprintf("%s_LDAP_ADDRESS", app_prefix))
+	account, okAcc := os.LookupEnv(fmt.Sprintf("%s_LDAP_USERNAME", app_prefix))
+	password, okPass := os.LookupEnv(fmt.Sprintf("%s_LDAP_PASSWORD", app_prefix))
+	basedn, okBase := os.LookupEnv(fmt.Sprintf("%s_LDAP_BASEDN", app_prefix))
+
+	if okAdd && okAcc && okPass && okBase {
+		return NewLDAPAuthenticator(account, password, address, basedn)
+	}
+
+	return nil, fmt.Errorf("Unable to init LDAP Authenticator check envs!")
 }
 
 func (a *LDAPAuthenticator) Close() error {
