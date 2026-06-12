@@ -68,7 +68,7 @@ type LDAPAuthenticator struct {
 // moreover is stores the BaseDN used for subsequent queries.
 func NewLDAPAuthenticator(account, password, address, basedn string) (*LDAPAuthenticator, error) {
 
-	slog.Debug("connecting to LDAP server", "address", address, "account", account, "password", password, "base DN", basedn)
+	slog.Debug("connecting to LDAP server", "address", address, "account", account, "password", "*********", "base DN", basedn)
 
 	// connect to the LDAP server
 	connection, err := ldap.DialURL(address)
