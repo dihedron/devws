@@ -592,7 +592,7 @@
         {{.Username}}
       </div>
       <button class="btn-logout"
-        hx-post="/api/v1/vm/logout"
+        hx-post="/api/v1/logout"
         hx-target="body"
         hx-swap="none">
         Logout
@@ -695,7 +695,7 @@
       <div id="table-container">
         <div class="htmx-indicator-overlay">loading...</div>
         <div
-          hx-get="/api/v1/vm/vms?page=1"
+          hx-get="/api/v1/vm?page=1"
           hx-trigger="load"
           hx-target="#table-container"
           hx-swap="innerHTML"
@@ -796,7 +796,7 @@
     document.getElementById('modal-confirm-btn').addEventListener('click', function() {
       if (!pendingAction) return;
       confirmModal.hide();
-      htmx.ajax('POST', `/api/v1/vm/vms/${pendingAction.id}/${pendingAction.action}`, {
+      htmx.ajax('POST', `/api/v1/vm/${pendingAction.id}/${pendingAction.action}`, {
         target: '#table-container',
         swap: 'innerHTML'
       });
@@ -806,7 +806,7 @@
  
     // Logout redirect
     document.body.addEventListener('htmx:afterRequest', function(evt) {
-      if (evt.detail.pathInfo.requestPath === '/api/v1/vm/logout') {
+      if (evt.detail.pathInfo.requestPath === '/api/v1/logout') {
         window.location.href = '/';
       }
     });
@@ -842,7 +842,7 @@
  
     function applyFilters() {
       updateFilterBadge();
-      htmx.ajax('GET', `/api/v1/vm/vms?${getFilterParams()}`, {
+      htmx.ajax('GET', `/api/v1/vm?${getFilterParams()}`, {
         target: '#table-container',
         swap:   'innerHTML',
       });
@@ -857,7 +857,7 @@
       // document.getElementById('f-active').checked   = false;
       // document.getElementById('f-inactive').checked = false;
       updateFilterBadge();
-      htmx.ajax('GET', '/api/v1/vm/vms?page=1', {
+      htmx.ajax('GET', '/api/v1/vm?page=1', {
         target: '#table-container',
         swap:   'innerHTML',
       });

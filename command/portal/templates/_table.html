@@ -1,4 +1,4 @@
-<!-- Partial: _table.html — rendered by /api/v1/vm/vms -->
+<!-- Partial: _table.html — rendered by /api/v1/vm -->
 <div class="htmx-indicator-overlay">loading...</div>
 
 <table class="data-table">
@@ -19,7 +19,7 @@
       <!-- <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.ID}}</td> -->
       <td>
         <button class="btn-action"
-          hx-get="/api/v1/vm/vms/detail/{{.ID}}"
+          hx-get="/api/v1/vm/detail/{{.ID}}"
           hx-target="#detail-body"
           hx-swap="innerHTML"
           hx-indicator="#detail-body"
@@ -124,7 +124,7 @@
   <div class="pagination-controls">
     <button class="page-btn"
       {{if le .Page 1}}disabled{{end}}
-      hx-get="/api/v1/vm/vms?page={{.PrevPage}}"
+      hx-get="/api/v1/vm?page={{.PrevPage}}"
       hx-target="#table-container"
       hx-swap="innerHTML"
       hx-indicator="#table-container">
@@ -133,7 +133,7 @@
 
     {{range .Pages}}
       <button class="page-btn {{if eq . $.Page}}active{{end}}"
-        hx-get="/api/v1/vm/vms?page={{.}}"
+        hx-get="/api/v1/vm?page={{.}}"
         hx-target="#table-container"
         hx-swap="innerHTML"
         hx-indicator="#table-container">
@@ -143,7 +143,7 @@
 
     <button class="page-btn"
       {{if ge .Page .TotalPages}}disabled{{end}}
-      hx-get="/api/v1/vm/vms?page={{.NextPage}}"
+      hx-get="/api/v1/vm?page={{.NextPage}}"
       hx-target="#table-container"
       hx-swap="innerHTML"
       hx-indicator="#table-container">

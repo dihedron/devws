@@ -33,7 +33,8 @@ func (cmd *Portal) Execute(args []string) error {
 	var authenticator Authenticator
 	var err error
 
-	if cmd.Configuration != nil {
+	// if not default value the load configuration
+	if cmd.Configuration != nil && cmd.Configuration.LDAP.Server != "ldaps://ldap.example.com:636" {
 		authenticator, err = NewLDAPAuthenticator(
 			cmd.Configuration.LDAP.Account,
 			cmd.Configuration.LDAP.Password,
@@ -78,7 +79,6 @@ func (cmd *Portal) Execute(args []string) error {
 	)
 
 	router.SetFuncMap(template.FuncMap{})
-	// router.LoadHTMLGlob("command/portal/assets/*.html")
 	router.LoadHTMLGlob("command/portal/templates/*.html")
 
 	unauthenticated := router.Group("")
@@ -88,7 +88,7 @@ func (cmd *Portal) Execute(args []string) error {
 			session := sessions.Default(c)
 			if username := session.Get("username"); username != nil {
 				slog.Debug("user already logged in, redirecting to main page...")
-				c.Redirect(http.StatusFound, "/api/v1/vm/")
+				c.Redirect(http.StatusFound, "/api/v1/")
 			} else {
 				slog.Debug("user not logged in yet, redirecting to login page")
 				c.Redirect(http.StatusFound, "/api/v1/auth/login")
@@ -106,14 +106,14 @@ func (cmd *Portal) Execute(args []string) error {
 			session := sessions.Default(c)
 			if u := session.Get("username"); u == username {
 				slog.Debug("user already logged in, redirecting to main page")
-				c.Redirect(http.StatusFound, "/api/v1/vm")
+				c.Redirect(http.StatusFound, "/api/v1")
 			} else {
 				slog.Debug("logging in user...", "username", username, "password", "*******")
 				if ok, err := authenticator.Authenticate(username, password); ok {
 					slog.Info("user successfully logged in", "username", username)
 					session.Set("username", username)
 					session.Save()
-					c.Redirect(http.StatusFound, "/api/v1/vm")
+					c.Redirect(http.StatusFound, "/api/v1")
 					return
 				} else {
 					slog.Error("failed to authenticate user", "username", username, "error", err)
@@ -127,7 +127,7 @@ func (cmd *Portal) Execute(args []string) error {
 
 	}
 
-	authenticated := router.Group("/api/v1/vm", SessionAuthMiddleware("Developer Workstations Realm", authenticator))
+	authenticated := router.Group("/api/v1", SessionAuthMiddleware("Developer Workstations Realm", authenticator))
 	{
 
 		authenticated.GET("/", func(c *gin.Context) {
@@ -138,7 +138,7 @@ func (cmd *Portal) Execute(args []string) error {
 			})
 		})
 
-		authenticated.GET("/vms", func(c *gin.Context) {
+		authenticated.GET("/vm", func(c *gin.Context) {
 			pageStr := c.DefaultQuery("page", "1")
 			page, err := strconv.Atoi(pageStr)
 			if err != nil || page < 1 {
@@ -177,7 +177,7 @@ func (cmd *Portal) Execute(args []string) error {
 			c.HTML(http.StatusOK, "_table.html", data)
 		})
 
-		authenticated.GET("/vms/detail/:id", func(c *gin.Context) {
+		authenticated.GET("/vm/detail/:id", func(c *gin.Context) {
 			pageStr := c.DefaultQuery("page", "1")
 			page, err := strconv.Atoi(pageStr)
 			if err != nil || page < 1 {
@@ -196,8 +196,8 @@ func (cmd *Portal) Execute(args []string) error {
 			c.Status(http.StatusNotFound)
 		})
 
-		// POST /api/v1/vm/vms/:id/:action
-		authenticated.POST("/vms/:id/:action", func(c *gin.Context) {
+		// POST /api/v1/vm/:id/:action
+		authenticated.POST("/vm/:id/:action", func(c *gin.Context) {
 			id := c.Param("id")
 			action := c.Param("action")
 			slog.Info("POST requested", "id", id, "action", action)
