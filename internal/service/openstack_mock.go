@@ -37,6 +37,9 @@ func (o *OpenstackMockService) List(ctx context.Context, options []openstack.Com
 			if l.Name == listOpts.Name {
 				filtered = append(filtered, l)
 			}
+			if l.ID == listOpts.Name {
+				filtered = append(filtered, l)
+			}
 		}
 		if listOpts.UserID != "" {
 			isFiltered = true
@@ -71,6 +74,20 @@ func (o *OpenstackMockService) List(ctx context.Context, options []openstack.Com
 		return filtered, nil
 	}
 	return list, nil
+}
+
+func (o *OpenstackMockService) View(ctx context.Context, id string) (*openstack.Workstation, error) {
+	slog.Info("View", "Id", id)
+	list := readOpenstackData()
+	var result openstack.Workstation
+	for _, l := range list {
+
+		if l.ID == id {
+			result = l
+		}
+	}
+
+	return &result, nil
 }
 
 func (o *OpenstackMockService) GetId(ctx context.Context, workstationNameOrID string) (string, error) {

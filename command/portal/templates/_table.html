@@ -18,8 +18,12 @@
     <tr>
       <!-- <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.ID}}</td> -->
       <td>
-        <button class="btn-action ">
-          <!-- onclick="openConfirm('detail', '{{.ID}}', '{{.Name}}')" -->
+        <button class="btn-action"
+          hx-get="/api/v1/vm/vms/detail/{{.ID}}"
+          hx-target="#detail-body"
+          hx-swap="innerHTML"
+          hx-indicator="#detail-body"
+          onclick="detailCanvas.show()">
           {{.ID}}
         </button>
       </td>

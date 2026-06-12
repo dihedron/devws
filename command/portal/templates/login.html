@@ -149,13 +149,19 @@
       </div>
       <button type="submit" class="btn-login">
         <span class="htmx-indicator">...</span>
-        <span>Accedi</span>
+        <span>Login</span>
       </button>
     </form>
   </div>
  
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script>
+    document.body.addEventListener('htmx:beforeSwap', function(evt) {
+    if (evt.detail.xhr.status === 401) {
+      evt.detail.shouldSwap = true;  // allow the swap
+      evt.detail.isError = false;    // don't treat as error
+    }
+  });
     document.body.addEventListener('htmx:afterRequest', function(evt) {
       if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.requestPath === '/login') {
         // redirect handled server-side via HX-Redirect header

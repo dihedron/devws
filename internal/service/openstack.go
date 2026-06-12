@@ -10,6 +10,7 @@ import (
 
 type OpenstackServiceI interface {
 	List(ctx context.Context, options []openstack.ComputeV2ListOption) ([]openstack.Workstation, error)
+	View(ctx context.Context, id string) (*openstack.Workstation, error)
 	GetId(ctx context.Context, workstationNameOrID string) (string, error)
 	Start(ctx context.Context, id string) error
 	Stop(ctx context.Context, id string) error
@@ -40,6 +41,15 @@ func (o *OpenstackService) List(ctx context.Context, options []openstack.Compute
 		return nil, err
 	}
 	return workstations, nil
+}
+
+func (o *OpenstackService) View(ctx context.Context, id string) (*openstack.Workstation, error) {
+	workstation, err := o.client.ComputeV2.View(ctx, id)
+	if err != nil {
+		slog.Error("error get workstation", "error", err)
+		return nil, err
+	}
+	return workstation, nil
 }
 
 func (o *OpenstackService) GetId(ctx context.Context, workstationNameOrID string) (string, error) {

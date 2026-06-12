@@ -1,0 +1,416 @@
+<!-- Partial: _detail.html — injected into #detail-body via HTMX -->
+<div style="flex:1">
+
+  <!-- HEADER SEZIONE -->
+  <div class="detail-section" style="display:flex;align-items:center;gap:1rem">
+    <div class="detail-avatar">{{slice .Name 0 1}}</div>
+    <div>
+      <div style="font-size:1rem;font-weight:600;color:var(--text)">{{.Name}}</div>
+    </div>
+  </div>
+
+  <!-- DATI PRINCIPALI -->
+  <div class="detail-section">
+    <div class="detail-section-title">General Information</div>
+
+    <div class="row g-3">
+      <div class="col-6">
+        <div class="detail-field">
+          <div class="detail-label">ID</div>
+          <div class="detail-value mono">{{.ID}}</div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="detail-field">
+          <div class="detail-label">STATUS</div>
+          <div class="detail-value">{{.Status}}</div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">Name</div>
+          <div class="detail-value mono">{{.Name}}</div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">User ID</div>
+          <div class="detail-value mono">{{.UserID}}</div>
+        </div>
+      </div>
+      
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">Disk Config</div>
+          <div class="detail-value mono">{{.DiskConfig}}</div>
+        </div>
+      </div>
+      
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">VM State</div>
+          <div class="detail-value mono">{{.VMState}}</div>
+        </div>
+      </div>
+
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">PowerState</div>
+          <div class="detail-value mono">{{.PowerState}}</div>
+        </div>
+      </div>
+
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">Launch Index</div>
+          <div class="detail-value mono">{{.LaunchIndex}}</div>
+        </div>
+      </div>
+
+      {{ if .Image }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">Image</div>
+          <div class="detail-value mono" style="font-size:0.60rem">{{.Image}}</div>
+        </div>
+      </div>
+      {{ end }}
+
+      {{ if .Description }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">Description</div>
+          <div class="detail-value mono" style="font-size:0.60rem">{{.Description}}</div>
+        </div>
+      </div>
+      {{ end }}
+
+    </div>
+  </div>
+
+  <!-- FLAVOR -->
+  <div class="detail-section">
+    <div class="detail-section-title">Flavor</div>
+    <div class="row g-3">
+      <div class="col-3">
+        <div class="detail-label">Name</div>
+        <div class="detail-value mono">{{.Flavor.Name}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">Disk</div>
+        <div class="detail-value mono">{{.Flavor.Disk}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">RAM</div>
+        <div class="detail-value mono">{{.Flavor.RAM}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">Swap</div>
+        <div class="detail-value mono">{{.Flavor.Swap}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">Ephemeral</div>
+        <div class="detail-value mono">{{.Flavor.Ephemeral}}</div>
+      </div>
+      <div class="col-1">
+        <div class="detail-label">VCPUs</div>
+        <div class="detail-value mono">{{.Flavor.VCPUs}}</div>
+      </div>
+
+      {{ if not (eq .Flavor.ExtraSpecsObj nil)}}
+      <div class="col-2">
+        <div class="detail-label">CPUCores</div>
+        <div class="detail-value mono">{{.Flavor.ExtraSpecsObj.CPUCores}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">CPUSockets</div>
+        <div class="detail-value mono">{{.Flavor.ExtraSpecsObj.CPUSockets}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">RNGAllowed</div>
+        <div class="detail-value mono">{{.Flavor.ExtraSpecsObj.RNGAllowed}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">WatchdogAction</div>
+        <div class="detail-value mono">{{.Flavor.ExtraSpecsObj.WatchdogAction}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">VGPUs</div>
+        <div class="detail-value mono">{{.Flavor.ExtraSpecsObj.VGPUs}}</div>
+      </div>
+      <div class="col-2">
+        <div class="detail-label">TraitCustomVGPU</div>
+        <div class="detail-value mono">{{.Flavor.ExtraSpecsObj.TraitCustomVGPU}}</div>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+  
+  <!-- NETWORKING -->
+  <div class="detail-section">
+    <div class="detail-section-title">Networking</div>
+    {{range $key, $val := .Addresses}}
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="detail-label">{{ $key }}</div>
+      </div>
+
+      {{range $val}}
+        <div class="col-3">
+          <div class="detail-label">MACAddress</div>
+          <div class="detail-value mono">{{ .MACAddress }}</div>
+        </div>
+        <div class="col-3">
+          <div class="detail-label">IPType</div>
+          <div class="detail-value mono">{{ .IPType }}</div>
+        </div>
+        <div class="col-3">
+          <div class="detail-label">IPAddress</div>
+          <div class="detail-value mono">{{ .IPAddress }}</div>
+        </div>
+        <div class="col-3">
+          <div class="detail-label">IPVersion</div>
+          <div class="detail-value mono">{{ .IPVersion }}</div>
+        </div>
+      {{end}}
+          
+    {{end}}
+    <div class="col-4">
+        <div class="detail-field">
+          <div class="detail-label">Availability Zone</div>
+          <div class="detail-value mono">{{.AvailabilityZone}}</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="detail-field">
+          <div class="detail-label">Host</div>
+          <div class="detail-value mono">{{.Host}}</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="detail-field">
+          <div class="detail-label">HostName</div>
+          <div class="detail-value mono">{{.HostName}}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Metadata -->
+  <div class="detail-section">
+    <div class="detail-section-title">Metadata</div>
+    <div class="row g-3">
+      <div class="col-12">
+        {{range $key, $val := .Metadata}}
+        <div class="detail-label">{{$key}}</div>
+        <div class="detail-value mono">{{ $val }}</div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Links -->
+  <div class="detail-section">
+    <div class="detail-section-title">Links</div>
+    <div class="row g-3">
+      {{range .Links}}
+      <div class="col-10">
+          <div class="detail-label">Href</div>
+          <div class="detail-value mono">{{ .Href }}</div>
+        </div>
+        <div class="col-2">
+          <div class="detail-label">Rel</div>
+          <div class="detail-value mono">{{ .Rel }}</div>
+        </div>
+        {{end}}
+    </div>
+  </div>
+  
+  <!-- SecurityGroups -->
+  <div class="detail-section">
+    <div class="detail-section-title">Security Groups</div>
+    <div class="row g-3">
+      <div class="col-10">
+        {{range .SecurityGroups}}
+        <div class="detail-value mono">{{ .Name }}</div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+  
+  <!-- AttachedVolumes -->
+  <div class="detail-section">
+    <div class="detail-section-title">Attached Volumes</div>
+    <div class="row g-3">
+      <div class="col-10">
+        {{range .AttachedVolumes}}
+        <div class="detail-value mono">{{ .ID }}</div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+  <!-- Tags -->
+  {{ if gt (len .Tags) 0 }}
+  <div class="detail-section">
+    <div class="detail-section-title">Tags</div>
+    <div class="row g-3">
+      <div class="col-12">
+        {{range .Tags}}
+        <div class="detail-value mono">{{ . }}</div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+  {{ end }}
+  
+  <!-- ServerGroups -->
+  {{ if not (eq .ServerGroups nil )}}
+  {{ if gt (len .ServerGroups) 0 }}
+  <div class="detail-section">
+    <div class="detail-section-title">Server Groups</div>
+    <div class="row g-3">
+      <div class="col-12">
+        {{range .ServerGroups}}
+        <div class="detail-value mono">{{ . }}</div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+  {{end}}
+  {{end}}
+
+  <!-- Other -->
+  <div class="detail-section">
+    <div class="detail-section-title">Other Details</div>
+    <div class="row g-3">
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">Created At</div>
+          <div class="detail-value mono" style="font-size:0.60rem">{{.CreatedAt}}</div>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">Launched At</div>
+          <div class="detail-value mono" style="font-size:0.60rem">{{.LaunchedAt}}</div>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">Updated At</div>
+          <div class="detail-value mono" style="font-size:0.60rem">{{.UpdatedAt}}</div>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="detail-field">
+          <div class="detail-label">Terminated At</div>
+          <div class="detail-value mono" style="font-size:0.60rem">{{.TerminatedAt}}</div>
+        </div>
+      </div>
+
+      {{ if .HypervisorHostname }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">Hypervisor Hostname</div>
+          <div class="detail-value mono">{{.HypervisorHostname}}</div>
+        </div>
+      </div>
+      {{ end }}
+      {{ if .KernelID }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">Kernel ID</div>
+          <div class="detail-value mono">{{.KernelID}}</div>
+        </div>
+      </div>
+      {{ end }}
+      {{ if .RAMDiskID }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">RAMDisk ID</div>
+          <div class="detail-value mono">{{.RAMDiskID}}</div>
+        </div>
+      </div>
+      {{ end }}
+      {{ if .ReservationID }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">Reservation ID</div>
+          <div class="detail-value mono">{{.ReservationID}}</div>
+        </div>
+      </div>
+      {{ end }}
+      {{ if .RootDeviceName }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">Root Device Name</div>
+          <div class="detail-value mono">{{.RootDeviceName}}</div>
+        </div>
+      </div>
+      {{ end }}
+      {{ if .UserData }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">User Data</div>
+          <div class="detail-value mono">{{.UserData}}</div>
+        </div>
+      </div>
+      {{ end }}
+      {{ if .ConfigDrive }}
+      <div class="col-12">
+        <div class="detail-field">
+          <div class="detail-label">ConfigDrive</div>
+          <div class="detail-value mono">{{.ConfigDrive}}</div>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+
+</div>
+
+<!-- AZIONI FISSE IN BASSO -->
+<div class="detail-actions">
+  {{if eq .Status "ACTIVE"}}
+  <button class="btn-detail-edit"
+    onclick="detailCanvas.hide(); openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
+    reboot
+  </button>
+  <button class="btn-detail-delete"
+    onclick="detailCanvas.hide(); openConfirm('stop', '{{.ID}}', '{{.Name}}')">
+    stop
+  </button>
+  <button class="btn-detail-delete"
+    onclick="detailCanvas.hide(); openConfirm('shelve', '{{.ID}}', '{{.Name}}')">
+    shelve
+  </button>
+  {{else if or  (eq .Status "SOFT_DELETED") (eq .Status "HARD_DELETED") }}
+  <button class="btn-detail-start"
+    onclick="detailCanvas.hide(); openConfirm('start', '{{.ID}}', '{{.Name}}')">
+    start
+  </button>
+  {{else if or (eq .Status "STOPPED") (eq .Status "ERROR")}}
+  <button class="btn-detail-start"
+    onclick="detailCanvas.hide(); openConfirm('start', '{{.ID}}', '{{.Name}}')">
+    start
+  </button>
+   <button class="btn-detail-edit"
+    onclick="detailCanvas.hide(); openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
+    reboot
+  </button>
+  {{else if eq .Status "SHELVED"}}
+   <button class="btn-detail-edit"
+    onclick="detailCanvas.hide(); openConfirm('unshelve', '{{.ID}}', '{{.Name}}')">
+    unshelve
+  </button>
+  {{else if eq .Status "PAUSED"}}
+  <button class="btn-detail-start"
+    onclick="detailCanvas.hide(); openConfirm('start', '{{.ID}}', '{{.Name}}')">
+    start
+  </button>
+  {{end}}
+  
+  
+</div>

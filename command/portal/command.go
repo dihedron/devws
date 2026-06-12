@@ -171,8 +171,10 @@ func (cmd *Portal) Execute(args []string) error {
 					return
 				} else {
 					slog.Error("failed to authenticate user", "username", username, "error", err)
+					c.HTML(http.StatusUnauthorized, "login_error.html", gin.H{
+						"Error": "Invalid credentials",
+					})
 				}
-				c.Redirect(http.StatusFound, "/api/v1/auth/login")
 			}
 
 		})
@@ -227,6 +229,25 @@ func (cmd *Portal) Execute(args []string) error {
 			data := NewTableData(vms, page)
 
 			c.HTML(http.StatusOK, "_table.html", data)
+		})
+
+		authenticated.GET("/vms/detail/:id", func(c *gin.Context) {
+			pageStr := c.DefaultQuery("page", "1")
+			page, err := strconv.Atoi(pageStr)
+			if err != nil || page < 1 {
+				page = 1
+			}
+
+			id := c.Param("id")
+
+			vm, err := openstackService.View(context.Background(), id)
+
+			if vm != nil {
+				c.HTML(http.StatusOK, "_detail.html", vm)
+				return
+			}
+
+			c.Status(http.StatusNotFound)
 		})
 
 		// POST /api/v1/vm/vms/:id/:action
