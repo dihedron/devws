@@ -23,8 +23,8 @@ import (
 
 type Portal struct {
 	base.Command
-
-	Address string `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
+	Configuration *Configuration `short:"c" long:"configuration" description:"Path to the configuration file (prefixed by @)" default:"@devws.yaml"`
+	// Address       string         `short:"a" long:"address" description:"Address to bind the API to." default:":3000"`
 }
 
 type Link struct {
@@ -82,7 +82,7 @@ func NewVM(base string, id string, status string) *VM {
 }
 
 func (cmd *Portal) Execute(args []string) error {
-	slog.Info("starting portal and API server", "address", cmd.Address)
+	slog.Info("starting portal and API server", "address", cmd.Configuration.Address)
 
 	var openstackService service.OpenstackServiceI
 	var authenticator Authenticator
@@ -299,8 +299,8 @@ func (cmd *Portal) Execute(args []string) error {
 	// https://github.com/puikinsh/login-forms/tree/main/forms/glassmorphism
 	// https://github.com/puikinsh/login-forms/tree/main/forms/material
 
-	slog.Info("portal and API server running", "address", cmd.Address)
-	err = router.Run(cmd.Address)
+	slog.Info("portal and API server running", "address", cmd.Configuration.Address)
+	err = router.Run(cmd.Configuration.Address)
 	if err != nil {
 		slog.Error("portal and API server failed", "error", err)
 		return fmt.Errorf("portal and API server failed: %w", err)
