@@ -400,7 +400,7 @@
     onclick="detailCanvas.hide(); openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
     reboot
   </button>
-  {{else if eq .Status "SHELVED"}}
+  {{else if or (eq .Status "SHELVED") (eq .Status "SHELVED_OFFLOADED")}}
    <button class="btn-detail-edit"
     onclick="detailCanvas.hide(); openConfirm('unshelve', '{{.ID}}', '{{.Name}}')">
     unshelve
