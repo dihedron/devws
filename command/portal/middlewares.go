@@ -1,7 +1,7 @@
 package portal
 
 import (
-	"fmt"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
@@ -34,21 +34,12 @@ func SessionAuthMiddleware(realm string, authenticator Authenticator) gin.Handle
 	return func(c *gin.Context) {
 		slog.Debug("session manager middleware - START")
 		session := sessions.Default(c)
-		user := session.Get("username")
+		session_username := session.Get("username")
 
 		// check if the user already has a valid session
-		if user != nil {
-
-			// Retrieve user domain roles
-			u, err := getUserWithRoles(user.(string), authenticator)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-			c.Set("user", u)
-
+		if session_username != nil {
 			// session is valid, proceed to the API handler
-			slog.Debug("valid session for user", "username", user)
+			slog.Debug("valid session for user", "username", session_username)
 			c.Next()
 			return
 		}
@@ -56,25 +47,24 @@ func SessionAuthMiddleware(realm string, authenticator Authenticator) gin.Handle
 		// no valid session, check for Basic Authentication headers
 		username, password, hasAuth := c.Request.BasicAuth()
 		if hasAuth {
-			if ok, _ := authenticator.Authenticate(username, password); ok {
+			if user, err := authenticator.Authenticate2(WithCredentials(username, password)); err == nil && user != nil {
 				// Basic Auth is valid, create a session for future requests.
-				session.Set("username", username)
+				session.Set("username", user.ID)
+				user_session, _ := json.Marshal(user)
+				session.Set("user_session", string(user_session))
 				if err := session.Save(); err != nil {
 					slog.Error("failed to save session", "error", err)
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 					return
 				}
-				// Retrieve user domain roles
-				u, err := getUserWithRoles(username, authenticator)
-				if err != nil {
-					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					return
-				}
-				c.Set("user", u)
-
 				// proceed to the API handler
 				c.Next()
 				return
+			} else {
+				slog.Error("failed to authenticate user", "username", username, "error", err)
+				c.HTML(http.StatusUnauthorized, "login_error.html", gin.H{
+					"Error": "Invalid credentials",
+				})
 			}
 		}
 
@@ -88,39 +78,3 @@ func SessionAuthMiddleware(realm string, authenticator Authenticator) gin.Handle
 		c.Redirect(http.StatusFound, "/api/v1/auth/login")
 	}
 }
-
-func getUserWithRoles(username string, authenticator Authenticator) (*User, error) {
-	allowedRoles, err := authenticator.DomainUserRoles(username)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve ldap user roles")
-	}
-	var userRole []Role
-	for _, role := range allowedRoles {
-		userRole = append(userRole, roles[role])
-	}
-	return &User{
-		ID:    username,
-		Email: "",
-		Roles: userRole,
-	}, nil
-}
-
-// func RequirePermissions(perms []Permission) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		user := c.MustGet("user").(*User)
-
-// 		hasPermission := false
-// 		for _, p := range perms {
-// 			if HasPermission(user, p) {
-// 				hasPermission = true
-// 				break
-// 			}
-// 		}
-// 		if !hasPermission {
-// 			c.AbortWithStatus(403)
-// 			return
-// 		}
-
-// 		c.Next()
-// 	}
-// }

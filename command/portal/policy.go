@@ -10,19 +10,19 @@ import (
 type Policy struct{}
 
 // can view all vms
-func (p Policy) CanViewVmsAsAdmin(user *User) bool {
+func (p Policy) CanViewVmsAsAdmin(user *UserSession) bool {
 	slog.Debug("CanViewVmsAsAdmin", "user", user, "PermVmsView", PermVmsView)
 	return HasPermission(user, PermVmsView)
 }
 
 // can view vm
-func (p Policy) CanViewVm(user *User) bool {
+func (p Policy) CanViewVm(user *UserSession) bool {
 	slog.Debug("CanViewVm", "user", user, "PermVmsView", PermVmView)
 	return HasPermission(user, PermVmView)
 }
 
 // can view specific vm detail
-func (p Policy) CanViewVmDetail(user *User, vm openstack.Workstation) bool {
+func (p Policy) CanViewVmDetail(user *UserSession, vm openstack.Workstation) bool {
 	slog.Debug("CanViewVmDetail", "user", user, "PermVmsView", PermVmViewDetail, "vm Id", vm.ID)
 	if p.CanViewVmsAsAdmin(user) {
 		return true
@@ -41,7 +41,7 @@ func (p Policy) CanViewVmDetail(user *User, vm openstack.Workstation) bool {
 }
 
 // can start a vm
-func (p Policy) CanStartVm(user *User, vm openstack.Workstation) bool {
+func (p Policy) CanStartVm(user *UserSession, vm openstack.Workstation) bool {
 	slog.Debug("CanStartVm", "user", user, "PermVmsView", PermVmStart, "vm Id", vm.ID)
 	if p.CanViewVmsAsAdmin(user) {
 		return true
@@ -60,7 +60,7 @@ func (p Policy) CanStartVm(user *User, vm openstack.Workstation) bool {
 }
 
 // can stop a vm
-func (p Policy) CanStopVm(user *User, vm openstack.Workstation) bool {
+func (p Policy) CanStopVm(user *UserSession, vm openstack.Workstation) bool {
 	if p.CanViewVmsAsAdmin(user) {
 		return true
 	}
@@ -78,7 +78,7 @@ func (p Policy) CanStopVm(user *User, vm openstack.Workstation) bool {
 }
 
 // can shelve a vm
-func (p Policy) CanShelveVm(user *User, vm openstack.Workstation) bool {
+func (p Policy) CanShelveVm(user *UserSession, vm openstack.Workstation) bool {
 	if p.CanViewVmsAsAdmin(user) {
 		return true
 	}
@@ -96,7 +96,7 @@ func (p Policy) CanShelveVm(user *User, vm openstack.Workstation) bool {
 }
 
 // can unshelve a vm
-func (p Policy) CanUnShelveVm(user *User, vm openstack.Workstation) bool {
+func (p Policy) CanUnShelveVm(user *UserSession, vm openstack.Workstation) bool {
 	if p.CanViewVmsAsAdmin(user) {
 		return true
 	}
@@ -114,7 +114,7 @@ func (p Policy) CanUnShelveVm(user *User, vm openstack.Workstation) bool {
 }
 
 // can reboot a vm
-func (p Policy) CanRebootVm(user *User, vm openstack.Workstation) bool {
+func (p Policy) CanRebootVm(user *UserSession, vm openstack.Workstation) bool {
 	if p.CanViewVmsAsAdmin(user) {
 		return true
 	}
@@ -132,6 +132,6 @@ func (p Policy) CanRebootVm(user *User, vm openstack.Workstation) bool {
 }
 
 // can tag a vm
-func (p Policy) CanTagVm(user *User) bool {
+func (p Policy) CanTagVm(user *UserSession) bool {
 	return p.CanViewVmsAsAdmin(user)
 }

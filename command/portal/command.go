@@ -2,6 +2,7 @@ package portal
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -126,9 +127,11 @@ func (cmd *Portal) Execute(args []string) error {
 				c.Redirect(http.StatusFound, "/api/v1")
 			} else {
 				slog.Debug("logging in user...", "username", username, "password", "*******")
-				if ok, err := authenticator.Authenticate(username, password); ok {
+				if user, err := authenticator.Authenticate2(WithCredentials(username, password)); err == nil && user != nil {
 					slog.Info("user successfully logged in", "username", username)
-					session.Set("username", username)
+					session.Set("username", user.ID)
+					user_session, _ := json.Marshal(user)
+					session.Set("user_session", string(user_session))
 					session.Save()
 					c.Redirect(http.StatusFound, "/api/v1")
 					return
@@ -158,7 +161,7 @@ func (cmd *Portal) Execute(args []string) error {
 		authenticated.GET("/vm", func(c *gin.Context) {
 
 			// Check Policy
-			user := c.MustGet("user").(*User)
+			user := getUserSession(c)
 			if !policy.CanViewVm(user) {
 				slog.Error("user misses required view role", "username", user.ID)
 				c.HTML(http.StatusUnauthorized, "error.html", gin.H{"Error": "Invalid roles"})
@@ -220,7 +223,7 @@ func (cmd *Portal) Execute(args []string) error {
 		authenticated.POST("/vm/:id/:action", func(c *gin.Context) {
 			id := c.Param("id")
 			action := c.Param("action")
-			user := c.MustGet("user").(*User)
+			user := getUserSession(c)
 
 			pageStr := c.DefaultQuery("page", "1")
 			page, err := strconv.Atoi(pageStr)
@@ -296,7 +299,7 @@ func (cmd *Portal) Execute(args []string) error {
 	return nil
 }
 
-func retrieve(openstackService service.OpenstackServiceI, options []openstack.ComputeV2ListOption, policy Policy, user *User) []openstack.Workstation {
+func retrieve(openstackService service.OpenstackServiceI, options []openstack.ComputeV2ListOption, policy Policy, user *UserSession) []openstack.Workstation {
 	vms, _ := openstackService.List(context.Background(), options)
 	vmsToShow := []openstack.Workstation{}
 
@@ -315,4 +318,14 @@ func retrieve(openstackService service.OpenstackServiceI, options []openstack.Co
 	}
 
 	return vmsToShow
+}
+
+func getUserSession(c *gin.Context) *UserSession {
+	session := sessions.Default(c)
+	usr_int := session.Get("user_session").(string)
+	usr := UserSession{}
+	if err := json.Unmarshal([]byte(usr_int), &usr); err != nil {
+		slog.Error("Unable to unmarshall ", "user_session", usr)
+	}
+	return &usr
 }

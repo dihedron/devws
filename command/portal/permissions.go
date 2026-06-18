@@ -62,8 +62,8 @@ func PermissionFromInt16(v int16) (Permission, bool) {
 }
 
 type Role struct {
-	Name        string
-	Permissions Permission
+	Name        string     `json:"name"`
+	Permissions Permission `json:"permissions"`
 }
 
 var roles = map[DomainRole]Role{
@@ -77,14 +77,12 @@ var roles = map[DomainRole]Role{
 	},
 }
 
-type User struct {
-	ID    string
-	Email string
-	Roles []Role
-	Data  any
+type UserSession struct {
+	ID    string `json:"id"`
+	Roles []Role `json:"roles"`
 }
 
-func HasPermission(user *User, perm Permission) bool {
+func HasPermission(user *UserSession, perm Permission) bool {
 	for _, role := range user.Roles {
 		if role.Permissions.Has(perm) {
 			return true

@@ -3,12 +3,32 @@ package portal
 import (
 	"fmt"
 	"log/slog"
-	"os"
-	"path"
 	"strings"
 
 	"github.com/go-ldap/ldap/v3"
 )
+
+type AuthenticateOptions struct {
+	username            string
+	password            string
+	skipPwdVerification bool
+}
+
+// Option is a function that configures a Server
+type Option func(*AuthenticateOptions)
+
+func WithCredentials(username, password string) func(*AuthenticateOptions) {
+	return func(a *AuthenticateOptions) {
+		a.username = username
+		a.password = password
+	}
+}
+
+func WithSkipPwdVerification(skipPwdVerification bool) func(*AuthenticateOptions) {
+	return func(a *AuthenticateOptions) {
+		a.skipPwdVerification = skipPwdVerification
+	}
+}
 
 type Authenticator interface {
 	// Authenticate will return true if the user could be successfully
@@ -16,8 +36,12 @@ type Authenticator interface {
 	// are invalid; false (with an error) if the authenticator encountered
 	// and internal processing error.
 	Authenticate(username, password string) (bool, error)
-	// Return the authenticated user expected roles for the application
-	DomainUserRoles(username string) ([]DomainRole, error)
+	// Authenticate a user an active session
+	//
+	// Variadics options:
+	// WithCredentials(username, password string) - username e password
+	// WithSkipPwdVerification(skip bool) - se true viene saltata la validazione della password
+	Authenticate2(opts ...Option) (*UserSession, error)
 	// Close can be used to perform cleanup operations.
 	Close() error
 }
@@ -52,12 +76,33 @@ func (a *StaticAuthenticator) Authenticate(username, password string) (bool, err
 	return false, nil
 }
 
-func (a *StaticAuthenticator) DomainUserRoles(username string) ([]DomainRole, error) {
-	if username == "admin" {
-		return []DomainRole{DomainRoleAdmin}, nil
-	} else {
-		return []DomainRole{DomainRoleDeveloper}, nil
+func (a *StaticAuthenticator) Authenticate2(opts ...Option) (*UserSession, error) {
+	authOpt := &AuthenticateOptions{
+		username:            "",
+		password:            "",
+		skipPwdVerification: false,
 	}
+	for _, opt := range opts {
+		opt(authOpt)
+	}
+	if pass, exists := a.accounts[authOpt.username]; exists {
+		if pass == authOpt.password {
+			slog.Debug("user successfully authenticated", "username", authOpt.username, "password", authOpt.password)
+			var userRole []Role
+			if authOpt.username == "admin" {
+				for _, role := range []DomainRole{DomainRoleAdmin} {
+					userRole = append(userRole, roles[role])
+				}
+			} else {
+				for _, role := range []DomainRole{DomainRoleDeveloper} {
+					userRole = append(userRole, roles[role])
+				}
+			}
+			return &UserSession{ID: authOpt.username, Roles: userRole}, nil
+		}
+	}
+	slog.Debug("error authenticating user", "username", authOpt.username)
+	return nil, nil
 }
 
 func (a *StaticAuthenticator) Close() error {
@@ -103,21 +148,6 @@ func NewLDAPAuthenticator(account, password, address, basedn string) (*LDAPAuthe
 		basedn:     basedn,
 		connection: connection,
 	}, nil
-}
-
-func NewLDAPAuthenticatorFromEnvs() (*LDAPAuthenticator, error) {
-
-	app_prefix := strings.ReplaceAll(strings.ToUpper(path.Base(os.Args[0])), "-", "_")
-	address, okAdd := os.LookupEnv(fmt.Sprintf("%s_LDAP_ADDRESS", app_prefix))
-	account, okAcc := os.LookupEnv(fmt.Sprintf("%s_LDAP_USERNAME", app_prefix))
-	password, okPass := os.LookupEnv(fmt.Sprintf("%s_LDAP_PASSWORD", app_prefix))
-	basedn, okBase := os.LookupEnv(fmt.Sprintf("%s_LDAP_BASEDN", app_prefix))
-
-	if okAdd && okAcc && okPass && okBase {
-		return NewLDAPAuthenticator(account, password, address, basedn)
-	}
-
-	return nil, fmt.Errorf("Unable to init LDAP Authenticator check envs!")
 }
 
 func (a *LDAPAuthenticator) Close() error {
@@ -191,7 +221,16 @@ func (a *LDAPAuthenticator) Authenticate(username, password string) (bool, error
 	return true, nil
 }
 
-func (a *LDAPAuthenticator) DomainUserRoles(username string) ([]DomainRole, error) {
+func (a *LDAPAuthenticator) Authenticate2(opts ...Option) (*UserSession, error) {
+
+	authOpt := &AuthenticateOptions{
+		username:            "",
+		password:            "",
+		skipPwdVerification: false,
+	}
+	for _, opt := range opts {
+		opt(authOpt)
+	}
 
 	// search for the user's Distinguished Name (DN)
 	search := ldap.NewSearchRequest(
@@ -201,14 +240,14 @@ func (a *LDAPAuthenticator) DomainUserRoles(username string) ([]DomainRole, erro
 		0,
 		0,
 		false,
-		fmt.Sprintf("(&(objectClass=person)(|(uid=%s)(sAMAccountName=%s)))", ldap.EscapeFilter(username), ldap.EscapeFilter(username)),
-		[]string{"dn", "memberOf"},
+		fmt.Sprintf("(&(objectClass=person)(|(uid=%s)(sAMAccountName=%s)))", ldap.EscapeFilter(authOpt.username), ldap.EscapeFilter(authOpt.username)),
+		[]string{"dn"}, // We only need to retrieve the DN, no other attributes
 		nil,
 	)
 
 	result, err := a.connection.Search(search)
 	if err != nil {
-		slog.Error("failed to search for user", "username", username)
+		slog.Error("failed to search for user", "username", authOpt.username)
 		return nil, fmt.Errorf("failed to search for user: %w", err)
 	}
 
@@ -224,6 +263,35 @@ func (a *LDAPAuthenticator) DomainUserRoles(username string) ([]DomainRole, erro
 	slog.Debug("user successfully retrieved")
 
 	// extract the user's exact DN from the search result
+	dn := result.Entries[0].DN
+
+	slog.Debug("user's DN found", "username", authOpt.username, "dn", dn)
+
+	connection, err := ldap.DialURL(a.address)
+	if err != nil {
+		slog.Error("error connecting to LDAP server", "address", a.address, "error", err)
+		return nil, fmt.Errorf("failed to connect to LDAP: %w", err)
+	}
+	slog.Debug("successfully connected to LDAP server")
+	defer connection.Close()
+
+	if !authOpt.skipPwdVerification {
+		// Step 4: Re-Bind as the specific user to verify their password
+		err = connection.Bind(dn, authOpt.password)
+		if err != nil {
+			// if the error is LDAP Result Code 49 (Invalid Credentials), the password was wrong;
+			// we return false, but no error, as this is an expected authentication failure.
+			if ldap.IsErrorWithCode(err, ldap.LDAPResultInvalidCredentials) {
+				slog.Error("invalid credentials", "error", err)
+				return nil, nil
+			}
+			// any other error means the bind failed for a system reason (e.g., connection lost)
+			slog.Error("failed to authenticate user", "username", authOpt.username, "error", err)
+			return nil, fmt.Errorf("failed to bind as user: %w", err)
+		}
+	}
+
+	// extract the user's exact DN from the search result
 	ownedRoles := []DomainRole{}
 	memberOf := getAttribute(result.Entries[0], "memberOf")
 	memberSet := make(map[string]struct{}, len(memberOf))
@@ -232,7 +300,7 @@ func (a *LDAPAuthenticator) DomainUserRoles(username string) ([]DomainRole, erro
 		memberSet[cn] = struct{}{}
 	}
 	for key := range memberSet {
-		slog.Debug("user's attributes found", "username", username, "memberOf", key)
+		slog.Debug("user's attributes found", "username", authOpt.username, "memberOf", key)
 	}
 
 	// Check application allowed roles
@@ -243,7 +311,20 @@ func (a *LDAPAuthenticator) DomainUserRoles(username string) ([]DomainRole, erro
 		ownedRoles = append(ownedRoles, DomainRoleDeveloper)
 	}
 
-	return ownedRoles, nil
+	// if the second bind succeeds, the credentials are valid!
+	slog.Info("user successfully authenticated", "username", authOpt.username)
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve ldap user roles")
+	}
+	var userRole []Role
+	for _, role := range ownedRoles {
+		userRole = append(userRole, roles[role])
+	}
+	return &UserSession{
+		ID:    authOpt.username,
+		Roles: userRole,
+	}, nil
 }
 
 func getAttribute(entry *ldap.Entry, name string) []string {
