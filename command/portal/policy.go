@@ -42,6 +42,7 @@ func (p Policy) CanViewVmDetail(user *User, vm openstack.Workstation) bool {
 
 // can start a vm
 func (p Policy) CanStartVm(user *User, vm openstack.Workstation) bool {
+	slog.Debug("CanStartVm", "user", user, "PermVmsView", PermVmStart, "vm Id", vm.ID)
 	if p.CanViewVmsAsAdmin(user) {
 		return true
 	}

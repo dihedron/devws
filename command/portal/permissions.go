@@ -7,51 +7,73 @@ const (
 	DomainRoleDeveloper DomainRole = "DEVWS_DEVELOPER"
 )
 
-type Permission string
+type Permission int16
 
 const (
-	PermVmsView      Permission = "vms.view"
-	PermVmViewDetail Permission = "vm.viewDetail"
-	PermVmView       Permission = "vm.view"
-	PermVmStart      Permission = "vm.start"
-	PermVmStop       Permission = "vm.stop"
-	PermVmShelve     Permission = "vm.shelve"
-	PermVmUnshelve   Permission = "vm.unshelve"
-	PermVmReboot     Permission = "vm.reboot"
-	PermVmTag        Permission = "vm.tag"
+	PermNone    Permission = 0
+	PermVmsView Permission = 1 << iota
+	PermVmViewDetail
+	PermVmView
+	PermVmStart
+	PermVmStop
+	PermVmShelve
+	PermVmUnshelve
+	PermVmReboot
+	PermAll = PermVmsView | PermVmViewDetail | PermVmView | PermVmStart | PermVmStop | PermVmShelve | PermVmUnshelve | PermVmReboot
 )
+
+var permNames = map[Permission]string{
+	PermVmsView:      "vms.view",
+	PermVmViewDetail: "vm.viewDetail",
+	PermVmView:       "vm.view",
+	PermVmStart:      "vm.start",
+	PermVmStop:       "vm.stop",
+	PermVmShelve:     "vm.shelve",
+	PermVmUnshelve:   "vm.unshelve",
+	PermVmReboot:     "vm.reboot",
+}
+
+var permValues = func() map[string]Permission {
+	inv := make(map[string]Permission, len(permNames))
+	for k, v := range permNames {
+		inv[v] = k
+	}
+	return inv
+}()
+
+// Has controlla se il flag è presente (AND bit a bit)
+func (p Permission) Has(flag Permission) bool {
+	return p&flag == flag
+}
+
+// IsValid controlla che tutti i bit attivi siano flag noti
+func (p Permission) IsValid() bool {
+	return p&^PermAll == 0
+}
+
+func PermissionFromString(key string) (Permission, bool) {
+	p, ok := permValues[key]
+	return p, ok
+}
+
+func PermissionFromInt16(v int16) (Permission, bool) {
+	p := Permission(v)
+	return p, p.IsValid()
+}
 
 type Role struct {
 	Name        string
-	Permissions []Permission
+	Permissions Permission
 }
 
 var roles = map[DomainRole]Role{
 	DomainRoleAdmin: {
-		Name: "ADMIN",
-		Permissions: []Permission{
-			PermVmsView,
-			PermVmView,
-			PermVmViewDetail,
-			PermVmStart,
-			PermVmStop,
-			PermVmShelve,
-			PermVmUnshelve,
-			PermVmReboot,
-			PermVmTag,
-		},
+		Name:        "ADMIN",
+		Permissions: PermAll,
 	},
 	DomainRoleDeveloper: {
-		Name: "DEVELOPER",
-		Permissions: []Permission{
-			PermVmView,
-			PermVmViewDetail,
-			PermVmStart,
-			PermVmStop,
-			PermVmShelve,
-			PermVmUnshelve,
-			PermVmReboot,
-		},
+		Name:        "DEVELOPER",
+		Permissions: PermVmView | PermVmViewDetail | PermVmStart | PermVmStop | PermVmShelve | PermVmUnshelve | PermVmReboot,
 	},
 }
 
@@ -64,10 +86,8 @@ type User struct {
 
 func HasPermission(user *User, perm Permission) bool {
 	for _, role := range user.Roles {
-		for _, p := range role.Permissions {
-			if p == perm {
-				return true
-			}
+		if role.Permissions.Has(perm) {
+			return true
 		}
 	}
 

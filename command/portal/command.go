@@ -91,7 +91,6 @@ func (cmd *Portal) Execute(args []string) error {
 				"canShelveVm":       policy.CanShelveVm,
 				"canUnShelveVm":     policy.CanUnShelveVm,
 				"canRebootVm":       policy.CanRebootVm,
-				"canTagVm":          policy.CanTagVm,
 			}).
 			ParseGlob("command/portal/templates/*.html"),
 	)

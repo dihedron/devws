@@ -5,7 +5,6 @@
   <thead>
     <tr>
       <th>ID</th>
-      <th>UserID</th>
       <th>Name</th>
       <th>Status</th>
       <th>Address</th>
@@ -28,13 +27,6 @@
           {{.ID}}
         </button>
         {{ end }}
-      </td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)" title="{{.UserID}}">
-        {{if gt (len .UserID) 10}}
-          {{slice .UserID 0 10}}...
-        {{else}}
-            {{.UserID}}
-        {{end}}
       </td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.Name}}</td>
       <td>
@@ -75,42 +67,51 @@
       </td>
       <td>
         {{if eq .Status "ACTIVE"}}
+          {{ if (canRebootVm $.user . ) }}
           <button class="btn-action"
             onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             reboot
           </button>
+          {{end}}
+          {{ if (canStopVm $.user . ) }}
           <button class="btn-action btn-danger"
             onclick="openConfirm('stop', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             stop
           </button>
+          {{end}}
+          {{ if (canShelveVm $.user . ) }}
           <button class="btn-action btn-warning"
             onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             shelve
           </button>
-        {{else if or  (eq .Status "SOFT_DELETED") (eq .Status "HARD_DELETED") }}
-          <button class="btn-action"
-            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            start
-          </button>
+          {{end}}
         {{else if or (eq .Status "STOPPED") (eq .Status "ERROR")}}
+          {{ if (canStartVm $.user . ) }}
           <button class="btn-action"
             onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             start
           </button>
+          {{end}}
+          {{ if (canRebootVm $.user . ) }}
           <button class="btn-action"
             onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             reboot
           </button>
+          {{end}}
         {{else if or (eq .Status "SHELVED") (eq .Status "SHELVED_OFFLOADED")}}
+          {{ if (canUnShelveVm $.user . ) }}
           <button class="btn-action btn-warning"
             onclick="openConfirm('unshelve', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             unshelve
           </button>
+          {{end}}
         {{else if eq .Status "PAUSED"}}
+          {{ if (canStartVm $.user . ) }}
           <button class="btn-action"
             onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             start
           </button>
+          {{end}}
         {{end}}
       </td>
     </tr>
