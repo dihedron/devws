@@ -14,10 +14,11 @@
     </tr>
   </thead>
   <tbody>
-    {{range .Records}}
+    {{range .data.Records}}
     <tr>
       <!-- <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)">{{.ID}}</td> -->
       <td>
+        {{ if (canViewVmDetail $.user . ) }}
         <button class="btn-action"
           hx-get="/api/v1/vm/detail/{{.ID}}"
           hx-target="#detail-body"
@@ -26,6 +27,7 @@
           onclick="detailCanvas.show()">
           {{.ID}}
         </button>
+        {{ end }}
       </td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted)" title="{{.UserID}}">
         {{if gt (len .UserID) 10}}
@@ -74,39 +76,39 @@
       <td>
         {{if eq .Status "ACTIVE"}}
           <button class="btn-action"
-            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             reboot
           </button>
           <button class="btn-action btn-danger"
-            onclick="openConfirm('stop', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('stop', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             stop
           </button>
           <button class="btn-action btn-warning"
-            onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             shelve
           </button>
         {{else if or  (eq .Status "SOFT_DELETED") (eq .Status "HARD_DELETED") }}
           <button class="btn-action"
-            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             start
           </button>
         {{else if or (eq .Status "STOPPED") (eq .Status "ERROR")}}
           <button class="btn-action"
-            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             start
           </button>
           <button class="btn-action"
-            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             reboot
           </button>
         {{else if or (eq .Status "SHELVED") (eq .Status "SHELVED_OFFLOADED")}}
           <button class="btn-action btn-warning"
-            onclick="openConfirm('unshelve', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('unshelve', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             unshelve
           </button>
         {{else if eq .Status "PAUSED"}}
           <button class="btn-action"
-            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}')">
+            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
             start
           </button>
         {{end}}
@@ -119,20 +121,20 @@
 <!-- PAGINATION -->
 <div class="pagination-bar">
   <span class="pagination-info">
-    Pagina {{.Page}} di {{.TotalPages}} &mdash; {{.TotalRecords}} record totali
+    Pagina {{.data.Page}} di {{.data.TotalPages}} &mdash; {{.data.TotalRecords}} record totali
   </span>
   <div class="pagination-controls">
     <button class="page-btn"
-      {{if le .Page 1}}disabled{{end}}
-      hx-get="/api/v1/vm?page={{.PrevPage}}"
+      {{if le .data.Page 1}}disabled{{end}}
+      hx-get="/api/v1/vm?page={{.data.PrevPage}}"
       hx-target="#table-container"
       hx-swap="innerHTML"
       hx-indicator="#table-container">
       &larr; prev
     </button>
 
-    {{range .Pages}}
-      <button class="page-btn {{if eq . $.Page}}active{{end}}"
+    {{range .data.Pages}}
+      <button class="page-btn {{if eq . $.data.Page}}active{{end}}"
         hx-get="/api/v1/vm?page={{.}}"
         hx-target="#table-container"
         hx-swap="innerHTML"
@@ -142,8 +144,8 @@
     {{end}}
 
     <button class="page-btn"
-      {{if ge .Page .TotalPages}}disabled{{end}}
-      hx-get="/api/v1/vm?page={{.NextPage}}"
+      {{if ge .data.Page .data.TotalPages}}disabled{{end}}
+      hx-get="/api/v1/vm?page={{.data.NextPage}}"
       hx-target="#table-container"
       hx-swap="innerHTML"
       hx-indicator="#table-container">

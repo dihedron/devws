@@ -3,12 +3,12 @@ package portal
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"text/template"
 
 	"github.com/dihedron/devws/command/base"
 	"github.com/dihedron/devws/command/portal/dto"
@@ -78,8 +78,26 @@ func (cmd *Portal) Execute(args []string) error {
 		sessions.Sessions("api_session", cookie.NewStore([]byte("super-secret-key"))),
 	)
 
-	router.SetFuncMap(template.FuncMap{})
-	router.LoadHTMLGlob("command/portal/templates/*.html")
+	var policy = Policy{}
+
+	policyTemplate := template.Must(
+		template.New("").
+			Funcs(template.FuncMap{
+				"canViewVmsAsAdmin": policy.CanViewVmsAsAdmin,
+				"canViewVm":         policy.CanViewVm,
+				"canStartVm":        policy.CanStartVm,
+				"canViewVmDetail":   policy.CanViewVmDetail,
+				"canStopVm":         policy.CanStopVm,
+				"canShelveVm":       policy.CanShelveVm,
+				"canUnShelveVm":     policy.CanUnShelveVm,
+				"canRebootVm":       policy.CanRebootVm,
+				"canTagVm":          policy.CanTagVm,
+			}).
+			ParseGlob("command/portal/templates/*.html"),
+	)
+
+	router.SetHTMLTemplate(policyTemplate)
+	// router.SetFuncMap(template.FuncMap{})
 
 	unauthenticated := router.Group("")
 	{
@@ -139,6 +157,14 @@ func (cmd *Portal) Execute(args []string) error {
 		})
 
 		authenticated.GET("/vm", func(c *gin.Context) {
+
+			// Check Policy
+			user := c.MustGet("user").(*User)
+			if !policy.CanViewVm(user) {
+				slog.Error("user misses required view role", "username", user.ID)
+				c.HTML(http.StatusUnauthorized, "error.html", gin.H{"Error": "Invalid roles"})
+			}
+
 			pageStr := c.DefaultQuery("page", "1")
 			page, err := strconv.Atoi(pageStr)
 			if err != nil || page < 1 {
@@ -169,24 +195,19 @@ func (cmd *Portal) Execute(args []string) error {
 				options = append(options, openstack.WithStatus(filterStatus))
 			}
 
-			vms, err := openstackService.List(context.Background(), options)
-
-			// vms := retrieveVms(c)
+			vms := retrieve(openstackService, options, policy, user)
 			data := dto.NewTableData(vms, page)
 
-			c.HTML(http.StatusOK, "_table.html", data)
+			c.HTML(http.StatusOK, "_table.html", gin.H{
+				"user": user,
+				"data": data,
+			})
 		})
 
 		authenticated.GET("/vm/detail/:id", func(c *gin.Context) {
-			pageStr := c.DefaultQuery("page", "1")
-			page, err := strconv.Atoi(pageStr)
-			if err != nil || page < 1 {
-				page = 1
-			}
-
 			id := c.Param("id")
 
-			vm, err := openstackService.View(context.Background(), id)
+			vm, _ := openstackService.View(context.Background(), id)
 
 			if vm != nil {
 				c.HTML(http.StatusOK, "_detail.html", vm)
@@ -200,31 +221,53 @@ func (cmd *Portal) Execute(args []string) error {
 		authenticated.POST("/vm/:id/:action", func(c *gin.Context) {
 			id := c.Param("id")
 			action := c.Param("action")
+			user := c.MustGet("user").(*User)
+
+			pageStr := c.DefaultQuery("page", "1")
+			page, err := strconv.Atoi(pageStr)
+			if err != nil || page < 1 {
+				page = 1
+			}
+
 			slog.Info("POST requested", "id", id, "action", action)
+
+			vm, _ := openstackService.View(context.Background(), id)
 
 			switch action {
 			case "stop":
 				slog.Debug("stop requested", "id", id)
-				openstackService.Stop(context.Background(), id)
+				if policy.CanStopVm(user, *vm) {
+					openstackService.Stop(context.Background(), id)
+				}
 			case "start":
 				slog.Debug("start requested", "id", id)
-				openstackService.Start(context.Background(), id)
+				if policy.CanStartVm(user, *vm) {
+					openstackService.Start(context.Background(), id)
+				}
 			case "reboot":
 				slog.Debug("reboot requested", "id", id)
-				openstackService.Reboot(context.Background(), id, servers.HardReboot)
+				if policy.CanRebootVm(user, *vm) {
+					openstackService.Reboot(context.Background(), id, servers.HardReboot)
+				}
 			case "shelve":
 				slog.Debug("shelve requested", "id", id)
-				openstackService.Shelve(context.Background(), id, false)
+				if policy.CanShelveVm(user, *vm) {
+					openstackService.Shelve(context.Background(), id, false)
+				}
 			case "unshelve":
 				slog.Debug("unshelve requested", "id", id)
-				openstackService.Unshelve(context.Background(), id, "cdm")
+				if policy.CanUnShelveVm(user, *vm) {
+					openstackService.Unshelve(context.Background(), id, "cdm")
+				}
 			}
 
-			options := []openstack.ComputeV2ListOption{}
-			vms, _ := openstackService.List(context.Background(), options)
-			data := dto.NewTableData(vms, 1)
+			vms := retrieve(openstackService, []openstack.ComputeV2ListOption{}, policy, user)
+			data := dto.NewTableData(vms, page)
 
-			c.HTML(http.StatusOK, "_table.html", data)
+			c.HTML(http.StatusOK, "_table.html", gin.H{
+				"user": user,
+				"data": data,
+			})
 		})
 
 		authenticated.POST("/logout", func(c *gin.Context) {
@@ -252,4 +295,25 @@ func (cmd *Portal) Execute(args []string) error {
 		return fmt.Errorf("portal and API server failed: %w", err)
 	}
 	return nil
+}
+
+func retrieve(openstackService service.OpenstackServiceI, options []openstack.ComputeV2ListOption, policy Policy, user *User) []openstack.Workstation {
+	vms, _ := openstackService.List(context.Background(), options)
+	vmsToShow := []openstack.Workstation{}
+
+	// Check Policy
+	if !policy.CanViewVmsAsAdmin(user) {
+		options = append(options, openstack.WithTags(fmt.Sprintf("devws.owner=%s", user.ID)))
+		for _, vm := range vms {
+			for _, tag := range *vm.Tags {
+				if tag == fmt.Sprintf("devws.owner=%s", user.ID) {
+					vmsToShow = append(vmsToShow, vm)
+				}
+			}
+		}
+	} else {
+		vmsToShow = vms
+	}
+
+	return vmsToShow
 }

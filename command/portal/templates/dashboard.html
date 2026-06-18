@@ -21,6 +21,8 @@
       --muted:      #64748b;
       --black:      #000000;
       --gray:       #5c5a5a;
+
+      --font-ibm-mono: 'IBM Plex Mono'
     }
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -44,7 +46,7 @@
       z-index: 100;
     }
     .app-nav .brand {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.95rem;
       color: var(--accent);
       letter-spacing: 0.05em;
@@ -55,7 +57,7 @@
       gap: 1.2rem;
     }
     .user-badge {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.78rem;
       color: var(--muted);
       display: flex;
@@ -74,7 +76,7 @@
       50%      { opacity: 0.4; }
     }
     .btn-logout {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.75rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -94,7 +96,7 @@
       margin-bottom: 1.75rem;
     }
     .page-title {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 1rem;
       color: var(--accent);
       margin-bottom: 0.15rem;
@@ -102,7 +104,7 @@
     .page-sub {
       font-size: 0.8rem;
       color: var(--muted);
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
     }
  
     /* ── TABLE CARD ── */
@@ -120,14 +122,14 @@
       justify-content: space-between;
     }
     .table-card-title {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.8rem;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.1em;
     }
     .record-count {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.75rem;
       color: var(--muted);
     }
@@ -139,7 +141,7 @@
       border-bottom: 1px solid var(--border);
     }
     .data-table th {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -159,7 +161,7 @@
     .data-table tbody tr:last-child td { border-bottom: none; }
  
     .badge-status {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.7rem;
       padding: 0.2rem 0.55rem;
       border-radius: 2px;
@@ -172,7 +174,7 @@
     .badge-unknown  { background: #b18424; color: var(--black); }
  
     .btn-action {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
@@ -199,13 +201,13 @@
       background: var(--surface2);
     }
     .pagination-info {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.75rem;
       color: var(--muted);
     }
     .pagination-controls { display: flex; gap: 0.3rem; }
     .page-btn {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.75rem;
       background: transparent;
       border: 1px solid var(--border);
@@ -228,7 +230,7 @@
       z-index: 10;
       align-items: center;
       justify-content: center;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.8rem;
       color: var(--accent);
     }
@@ -246,7 +248,7 @@
       padding: 1rem 1.25rem;
     }
     .modal-title {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.9rem;
       color: var(--accent);
     }
@@ -255,7 +257,7 @@
       font-size: 0.875rem;
     }
     .modal-body .item-detail {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.8rem;
       color: var(--muted);
       margin-top: 0.5rem;
@@ -266,7 +268,7 @@
       gap: 0.5rem;
     }
     .btn-cancel {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
@@ -278,7 +280,7 @@
       cursor: pointer;
     }
     .btn-confirm {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
@@ -309,7 +311,7 @@
     }
     .filter-panel .form-label {
       font-size: 0.7rem;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -322,7 +324,7 @@
       border: 1px solid var(--border);
       color: var(--text);
       border-radius: 2px;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.82rem;
       padding: 0.4rem 0.7rem;
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -346,7 +348,7 @@
       border-color: var(--accent);
     }
     .filter-panel .form-check-label {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.78rem;
       color: var(--muted);
     }
@@ -361,7 +363,7 @@
     /* buttons row */
     .filter-actions { display: flex; gap: 0.5rem; align-items: flex-end; padding-bottom: 0.1rem; }
     .btn-filter-apply {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -376,7 +378,7 @@
     }
     .btn-filter-apply:hover { background: var(--accent); color: #0d0f14; }
     .btn-filter-reset {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -392,7 +394,7 @@
     .btn-filter-reset:hover { border-color: var(--muted); color: var(--text); }
     /* toggle button in header */
     .btn-filter-toggle {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -436,7 +438,7 @@
       background: var(--surface);
     }
     .detail-canvas .offcanvas-title {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.9rem;
       color: var(--accent);
     }
@@ -460,7 +462,7 @@
     }
     .detail-section:last-child { border-bottom: none; }
     .detail-section-title {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
@@ -470,7 +472,7 @@
     .detail-field { margin-bottom: 0.75rem; }
     .detail-field:last-child { margin-bottom: 0; }
     .detail-label {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -482,7 +484,7 @@
       color: var(--text);
     }
     .detail-value.mono {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.82rem;
       color: var(--muted);
     }
@@ -494,7 +496,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 1.2rem;
       color: var(--accent);
       font-weight: 700;
@@ -509,7 +511,7 @@
     }
     .btn-detail-start {
       flex: 1;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -524,7 +526,7 @@
     .btn-detail-start:hover { background: var(--accent); color: #0d0f14; }
     .btn-detail-edit {
       flex: 1;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -539,7 +541,7 @@
     .btn-detail-edit:hover { background: var(--accent); color: #0d0f14; }
     .btn-detail-delete {
       flex: 1;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -565,7 +567,7 @@
       gap: 0.5rem;
     }
     .app-toast {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-ibm-mono), monospace;
       font-size: 0.8rem;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -716,7 +718,7 @@
     </div>
     <div class="offcanvas-body d-flex flex-column" style="padding:0">
       <div id="detail-body" style="flex:1;overflow-y:auto">
-        <div class="detail-section" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.8rem">
+        <div class="detail-section" style="color:var(--muted);font-family:var(--font-ibm-mono),monospace;font-size:0.8rem">
           Select a vm from the table.
         </div>
       </div>
@@ -735,7 +737,7 @@
     let pendingAction = null;
  
     // Open confirm modal from table rows
-    function openConfirm(action, id, name) {
+    function openConfirm(action, id, name, page) {
       const messages = {
         stop: `Stop the selected resource?`,
         start: `Start the selected resource?`,
@@ -756,6 +758,7 @@
       case "start":
         document.getElementById('confirmModalLabel').textContent = '// Start VM';
         console.log(action);
+        console.log(page)
         break;
       case "shelve":
         document.getElementById('confirmModalLabel').textContent = '// Shelve VM';
@@ -772,14 +775,14 @@
       default:
         console.log(`Sorry, action ${action} unkwnown.`);
       }
-      pendingAction = { action, id, name };
+      pendingAction = { action, id, name, page};
       confirmModal.show();
     }
  
     document.getElementById('modal-confirm-btn').addEventListener('click', function() {
       if (!pendingAction) return;
       confirmModal.hide();
-      htmx.ajax('POST', `/api/v1/vm/${pendingAction.id}/${pendingAction.action}`, {
+      htmx.ajax('POST', `/api/v1/vm/${pendingAction.id}/${pendingAction.action}?page=${pendingAction.page}`, {
         target: '#table-container',
         swap: 'innerHTML'
       });

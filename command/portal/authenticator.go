@@ -16,6 +16,8 @@ type Authenticator interface {
 	// are invalid; false (with an error) if the authenticator encountered
 	// and internal processing error.
 	Authenticate(username, password string) (bool, error)
+	// Return the authenticated user expected roles for the application
+	DomainUserRoles(username string) ([]DomainRole, error)
 	// Close can be used to perform cleanup operations.
 	Close() error
 }
@@ -48,6 +50,14 @@ func (a *StaticAuthenticator) Authenticate(username, password string) (bool, err
 	}
 	slog.Debug("error authenticating user", "username", username)
 	return false, nil
+}
+
+func (a *StaticAuthenticator) DomainUserRoles(username string) ([]DomainRole, error) {
+	if username == "admin" {
+		return []DomainRole{DomainRoleAdmin}, nil
+	} else {
+		return []DomainRole{DomainRoleDeveloper}, nil
+	}
 }
 
 func (a *StaticAuthenticator) Close() error {
@@ -179,4 +189,68 @@ func (a *LDAPAuthenticator) Authenticate(username, password string) (bool, error
 	// if the second bind succeeds, the credentials are valid!
 	slog.Info("user successfully authenticated", "username", username)
 	return true, nil
+}
+
+func (a *LDAPAuthenticator) DomainUserRoles(username string) ([]DomainRole, error) {
+
+	// search for the user's Distinguished Name (DN)
+	search := ldap.NewSearchRequest(
+		a.basedn,
+		ldap.ScopeWholeSubtree,
+		ldap.NeverDerefAliases,
+		0,
+		0,
+		false,
+		fmt.Sprintf("(&(objectClass=person)(|(uid=%s)(sAMAccountName=%s)))", ldap.EscapeFilter(username), ldap.EscapeFilter(username)),
+		[]string{"dn", "memberOf"},
+		nil,
+	)
+
+	result, err := a.connection.Search(search)
+	if err != nil {
+		slog.Error("failed to search for user", "username", username)
+		return nil, fmt.Errorf("failed to search for user: %w", err)
+	}
+
+	// handle search results
+	if len(result.Entries) == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	if len(result.Entries) > 1 {
+		return nil, fmt.Errorf("multiple users found with the same username")
+	}
+
+	slog.Debug("user successfully retrieved")
+
+	// extract the user's exact DN from the search result
+	ownedRoles := []DomainRole{}
+	memberOf := getAttribute(result.Entries[0], "memberOf")
+	memberSet := make(map[string]struct{}, len(memberOf))
+	for _, group := range memberOf {
+		cn := strings.Split(strings.Split(group, ",")[0], "=")[1]
+		memberSet[cn] = struct{}{}
+	}
+	for key := range memberSet {
+		slog.Debug("user's attributes found", "username", username, "memberOf", key)
+	}
+
+	// Check application allowed roles
+	if _, ok := memberSet[string(DomainRoleAdmin)]; ok {
+		ownedRoles = append(ownedRoles, DomainRoleAdmin)
+	}
+	if _, ok := memberSet[string(DomainRoleDeveloper)]; ok {
+		ownedRoles = append(ownedRoles, DomainRoleDeveloper)
+	}
+
+	return ownedRoles, nil
+}
+
+func getAttribute(entry *ldap.Entry, name string) []string {
+	for _, attr := range entry.Attributes {
+		if attr.Name == name {
+			return attr.Values
+		}
+	}
+	return nil
 }
