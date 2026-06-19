@@ -19,7 +19,8 @@ const (
 	PermVmShelve
 	PermVmUnshelve
 	PermVmReboot
-	PermAll = PermVmsView | PermVmViewDetail | PermVmView | PermVmStart | PermVmStop | PermVmShelve | PermVmUnshelve | PermVmReboot
+	PermVmPause
+	PermAll = PermVmsView | PermVmViewDetail | PermVmView | PermVmStart | PermVmStop | PermVmShelve | PermVmUnshelve | PermVmReboot | PermVmPause
 )
 
 var permNames = map[Permission]string{
@@ -31,6 +32,7 @@ var permNames = map[Permission]string{
 	PermVmShelve:     "vm.shelve",
 	PermVmUnshelve:   "vm.unshelve",
 	PermVmReboot:     "vm.reboot",
+	PermVmPause:      "vm.pause",
 }
 
 var permValues = func() map[string]Permission {
@@ -73,7 +75,7 @@ var roles = map[DomainRole]Role{
 	},
 	DomainRoleDeveloper: {
 		Name:        "DEVELOPER",
-		Permissions: PermVmView | PermVmViewDetail | PermVmStart | PermVmStop | PermVmShelve | PermVmUnshelve | PermVmReboot,
+		Permissions: PermVmView | PermVmViewDetail | PermVmStart | PermVmStop | PermVmShelve | PermVmUnshelve | PermVmReboot | PermVmPause,
 	},
 }
 

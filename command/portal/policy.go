@@ -9,6 +9,26 @@ import (
 
 type Policy struct{}
 
+// can do operation on vm
+func (p Policy) CanOperateOnVM(operation string, user *UserSession, vm openstack.Workstation) bool {
+	slog.Debug("CanOperateOnVM", "operation", operation, "user", user, "PermVmsView", PermVmViewDetail, "vm Id", vm.ID)
+	switch operation {
+	case "start":
+		return p.CanStartVm(user, vm)
+	case "stop":
+		return p.CanStopVm(user, vm)
+	case "shelve":
+		return p.CanShelveVm(user, vm)
+	case "unshelve":
+		return p.CanUnShelveVm(user, vm)
+	case "reboot":
+		return p.CanRebootVm(user, vm)
+	case "pause":
+		return p.CanPauseVm(user, vm)
+	}
+	return false
+}
+
 // can view all vms
 func (p Policy) CanViewVmsAsAdmin(user *UserSession) bool {
 	slog.Debug("CanViewVmsAsAdmin", "user", user, "PermVmsView", PermVmsView)
@@ -131,7 +151,20 @@ func (p Policy) CanRebootVm(user *UserSession, vm openstack.Workstation) bool {
 	return result
 }
 
-// can tag a vm
-func (p Policy) CanTagVm(user *UserSession) bool {
-	return p.CanViewVmsAsAdmin(user)
+// can reboot a vm
+func (p Policy) CanPauseVm(user *UserSession, vm openstack.Workstation) bool {
+	if p.CanViewVmsAsAdmin(user) {
+		return true
+	}
+	result := false
+	if len(*vm.Tags) == 0 {
+		return result
+	}
+	for _, tag := range *vm.Tags {
+		if tag == fmt.Sprintf("devws.owner=%s", user.ID) && HasPermission(user, PermVmPause) {
+			result = true
+			break
+		}
+	}
+	return result
 }

@@ -66,53 +66,22 @@
         {{end}} -->
       </td>
       <td>
-        {{if eq .Status "ACTIVE"}}
-          {{ if (canRebootVm $.user . ) }}
-          <button class="btn-action"
-            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            reboot
-          </button>
+        {{ $vm := . }}
+        {{ $ops := (allowedOperations .Status) }}
+        {{ range $op := $ops }}
+          {{ if (canOperateOnVM $op.Operation $.user $vm ) }}
+            {{$btnType := ""}}
+              {{if eq $op.Operation "stop" }}
+                  {{$btnType = "btn-danger"}}
+              {{else if eq $op.Operation "reboot"}}
+                {{$btnType = "btn-warning"}}
+              {{end}}
+              <button class="btn-action {{$btnType}}"
+                onclick="openConfirm('{{$op.Operation}}', '{{$vm.ID}}', '{{$vm.Name}}', '{{$.data.Page}}')">
+                {{$op.Operation}}
+              </button>
           {{end}}
-          {{ if (canStopVm $.user . ) }}
-          <button class="btn-action btn-danger"
-            onclick="openConfirm('stop', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            stop
-          </button>
-          {{end}}
-          {{ if (canShelveVm $.user . ) }}
-          <button class="btn-action btn-warning"
-            onclick="openConfirm('shelve', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            shelve
-          </button>
-          {{end}}
-        {{else if or (eq .Status "STOPPED") (eq .Status "ERROR")}}
-          {{ if (canStartVm $.user . ) }}
-          <button class="btn-action"
-            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            start
-          </button>
-          {{end}}
-          {{ if (canRebootVm $.user . ) }}
-          <button class="btn-action"
-            onclick="openConfirm('reboot', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            reboot
-          </button>
-          {{end}}
-        {{else if or (eq .Status "SHELVED") (eq .Status "SHELVED_OFFLOADED")}}
-          {{ if (canUnShelveVm $.user . ) }}
-          <button class="btn-action btn-warning"
-            onclick="openConfirm('unshelve', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            unshelve
-          </button>
-          {{end}}
-        {{else if eq .Status "PAUSED"}}
-          {{ if (canStartVm $.user . ) }}
-          <button class="btn-action"
-            onclick="openConfirm('start', '{{.ID}}', '{{.Name}}', '{{$.data.Page}}')">
-            start
-          </button>
-          {{end}}
-        {{end}}
+        {{ end }}
       </td>
     </tr>
     {{end}}

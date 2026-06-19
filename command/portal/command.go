@@ -13,6 +13,7 @@ import (
 
 	"github.com/dihedron/devws/command/base"
 	"github.com/dihedron/devws/command/portal/dto"
+	"github.com/dihedron/devws/command/portal/vmstate"
 	"github.com/dihedron/devws/internal/service"
 	"github.com/dihedron/devws/openstack"
 	"github.com/gin-contrib/sessions"
@@ -81,22 +82,22 @@ func (cmd *Portal) Execute(args []string) error {
 
 	var policy = Policy{}
 
-	policyTemplate := template.Must(
+	customTemplate := template.Must(
 		template.New("").
 			Funcs(template.FuncMap{
 				"canViewVmsAsAdmin": policy.CanViewVmsAsAdmin,
 				"canViewVm":         policy.CanViewVm,
-				"canStartVm":        policy.CanStartVm,
 				"canViewVmDetail":   policy.CanViewVmDetail,
-				"canStopVm":         policy.CanStopVm,
-				"canShelveVm":       policy.CanShelveVm,
-				"canUnShelveVm":     policy.CanUnShelveVm,
-				"canRebootVm":       policy.CanRebootVm,
+				"canOperateOnVM":    policy.CanOperateOnVM,
+			}).
+			Funcs(template.FuncMap{
+				"vmStates":          vmstate.VMStates,
+				"allowedOperations": vmstate.AllowedOperations,
 			}).
 			ParseGlob("command/portal/templates/*.html"),
 	)
 
-	router.SetHTMLTemplate(policyTemplate)
+	router.SetHTMLTemplate(customTemplate)
 	// router.SetFuncMap(template.FuncMap{})
 
 	unauthenticated := router.Group("")
@@ -208,11 +209,15 @@ func (cmd *Portal) Execute(args []string) error {
 
 		authenticated.GET("/vm/detail/:id", func(c *gin.Context) {
 			id := c.Param("id")
+			user := getUserSession(c)
 
 			vm, _ := openstackService.View(context.Background(), id)
 
 			if vm != nil {
-				c.HTML(http.StatusOK, "_detail.html", vm)
+				c.HTML(http.StatusOK, "_detail.html", gin.H{
+					"user": user,
+					"data": vm,
+				})
 				return
 			}
 

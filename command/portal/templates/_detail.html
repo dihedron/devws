@@ -1,5 +1,7 @@
 <!-- Partial: _detail.html — injected into #detail-body via HTMX -->
+{{with .data}}
 <div style="flex:1">
+
 
   <!-- HEADER SEZIONE -->
   <div class="detail-section" style="display:flex;align-items:center;gap:1rem">
@@ -373,44 +375,22 @@
 
 <!-- AZIONI FISSE IN BASSO -->
 <div class="detail-actions">
-  {{if eq .Status "ACTIVE"}}
-  <button class="btn-detail-edit"
-    onclick="detailCanvas.hide(); openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
-    reboot
-  </button>
-  <button class="btn-detail-delete"
-    onclick="detailCanvas.hide(); openConfirm('stop', '{{.ID}}', '{{.Name}}')">
-    stop
-  </button>
-  <button class="btn-detail-delete"
-    onclick="detailCanvas.hide(); openConfirm('shelve', '{{.ID}}', '{{.Name}}')">
-    shelve
-  </button>
-  {{else if or  (eq .Status "SOFT_DELETED") (eq .Status "HARD_DELETED") }}
-  <button class="btn-detail-start"
-    onclick="detailCanvas.hide(); openConfirm('start', '{{.ID}}', '{{.Name}}')">
-    start
-  </button>
-  {{else if or (eq .Status "STOPPED") (eq .Status "ERROR")}}
-  <button class="btn-detail-start"
-    onclick="detailCanvas.hide(); openConfirm('start', '{{.ID}}', '{{.Name}}')">
-    start
-  </button>
-   <button class="btn-detail-edit"
-    onclick="detailCanvas.hide(); openConfirm('reboot', '{{.ID}}', '{{.Name}}')">
-    reboot
-  </button>
-  {{else if or (eq .Status "SHELVED") (eq .Status "SHELVED_OFFLOADED")}}
-   <button class="btn-detail-edit"
-    onclick="detailCanvas.hide(); openConfirm('unshelve', '{{.ID}}', '{{.Name}}')">
-    unshelve
-  </button>
-  {{else if eq .Status "PAUSED"}}
-  <button class="btn-detail-start"
-    onclick="detailCanvas.hide(); openConfirm('start', '{{.ID}}', '{{.Name}}')">
-    start
-  </button>
-  {{end}}
-  
-  
+  {{ $vm := . }}
+        {{ $ops := (allowedOperations .Status) }}
+        {{ range $op := $ops }}
+          {{ if (canOperateOnVM $op.Operation $.user $vm ) }}
+            {{$btnType := "start"}}
+              {{if eq $op.Operation "stop" }}
+                  {{$btnType = "delete"}}
+              {{else if eq $op.Operation "reboot"}}
+                {{$btnType = "edit"}}
+              {{end}}
+              <button class="btn-detail-{{$btnType}}"
+                onclick="detailCanvas.hide(); openConfirm('{{$op.Operation}}', '{{$vm.ID}}', '{{$vm.Name}}')">
+                {{$op.Operation}}
+              </button>
+          {{end}}
+        {{ end }}
 </div>
+
+{{end}}
