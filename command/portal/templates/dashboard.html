@@ -1,868 +1,338 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>// DEVWS Dashboard</title>
+    <script>
+    document.documentElement.setAttribute(
+      'data-bs-theme',
+      localStorage.getItem('theme') ?? 'dark'
+    );
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
   <style>
-    :root {
-      --bg:         #0d0f14;
-      --surface:    #161a22;
-      --surface2:   #1e2330;
-      --border:     #2a2f3d;
-      --accent:     #4ade80;
-      --accent-dim: #1f4a2e;
-      --red:        #f87171;
-      --yellow:     #fbbf24;
-      --text:       #e2e8f0;
-      --light:      #99b1d4;
-      --muted:      #64748b;
-      --black:      #000000;
-      --gray:       #5c5a5a;
+    body { font-family: 'IBM Plex Sans', sans-serif; font-size: .9rem; }
 
-      --font-ibm-mono: 'IBM Plex Mono'
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'IBM Plex Sans', sans-serif;
-      min-height: 100vh;
-    }
- 
-    /* ── NAVBAR ── */
-    .app-nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .app-nav .brand {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.95rem;
-      color: var(--accent);
-      letter-spacing: 0.05em;
-    }
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-    .user-badge {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.78rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    /* pulsing online dot */
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
     .user-dot {
-      width: 8px; height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      display: inline-block;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.4; }
-    }
-    .btn-logout {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 0.35rem 0.9rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .btn-logout:hover { border-color: var(--red); color: var(--red); }
- 
-    /* ── MAIN CONTENT ── */
-    .main-content { padding: 2rem; }
-    .page-header {
-      margin-bottom: 1.75rem;
-    }
-    .page-title {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 1rem;
-      color: var(--accent);
-      margin-bottom: 0.15rem;
-    }
-    .page-sub {
-      font-size: 0.8rem;
-      color: var(--muted);
-      font-family: var(--font-ibm-mono), monospace;
-    }
- 
-    /* ── TABLE CARD ── */
-    .table-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .table-card-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .table-card-title {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .record-count {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
- 
-    /* ── TABLE ── */
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table thead tr {
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-    }
-    .data-table th {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      padding: 0.7rem 1.25rem;
-      text-align: left;
-      white-space: nowrap;
-    }
-    .data-table td {
-      padding: 0.75rem 1.25rem;
-      font-size: 0.875rem;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-    .data-table tbody tr { transition: background 0.15s; }
-    .data-table tbody tr:hover { background: var(--surface2); }
-    .data-table tbody tr:last-child td { border-bottom: none; }
- 
-    .badge-status {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.7rem;
-      padding: 0.2rem 0.55rem;
-      border-radius: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .badge-running   { background: var(--accent-dim); color: var(--accent); }
-    .badge-stopped { background: #2d1f1f; color: var(--red); }
-    .badge-inactive  { background: #2d2410; color: var(--yellow); }
-    .badge-unknown  { background: #b18424; color: var(--black); }
- 
-    .btn-action {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 0.25rem 0.65rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-      margin-right: 0.3rem;
-    }
-    .btn-action:hover        { border-color: var(--accent); color: var(--accent); }
-    .btn-action.btn-danger:hover { border-color: var(--red); color: var(--red); }
-    .btn-action.btn-warning:hover { border-color: var(--orange); color: var(--orange); }
- 
-    /* ── PAGINATION ── */
-    .pagination-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.9rem 1.25rem;
-      border-top: 1px solid var(--border);
-      background: var(--surface2);
-    }
-    .pagination-info {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-    .pagination-controls { display: flex; gap: 0.3rem; }
-    .page-btn {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.75rem;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 0.28rem 0.65rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s, background 0.15s;
-    }
-    .page-btn:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
-    .page-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-    .page-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
- 
-    /* ── HTMX loading ── */
-    #table-container { position: relative; }
-    .htmx-indicator-overlay {
-      display: none;
-      position: absolute; inset: 0;
-      background: rgba(13,15,20,0.5);
-      z-index: 10;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.8rem;
-      color: var(--accent);
-    }
-    .htmx-request .htmx-indicator-overlay { display: flex; }
- 
-    /* ── MODAL ── */
-    .modal-content {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text);
-    }
-    .modal-header {
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 1.25rem;
-    }
-    .modal-title {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.9rem;
-      color: var(--accent);
-    }
-    .modal-body {
-      padding: 1.25rem;
-      font-size: 0.875rem;
-    }
-    .modal-body .item-detail {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-top: 0.5rem;
-    }
-    .modal-footer {
-      border-top: 1px solid var(--border);
-      padding: 0.9rem 1.25rem;
-      gap: 0.5rem;
-    }
-    .btn-cancel {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 0.45rem 1rem;
-      border-radius: 2px;
-      cursor: pointer;
-    }
-    .btn-confirm {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      background: var(--red);
-      border: none;
-      color: #0d0f14;
-      font-weight: 600;
-      padding: 0.45rem 1rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .btn-confirm:hover { opacity: 0.85; }
-    .btn-close { filter: invert(1) opacity(0.4); }
-
-        /* ── FILTER PANEL ── */
-    .filter-panel {
-      border-bottom: 1px solid var(--border);
-      background: var(--surface2);
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.3s ease, padding 0.3s ease;
-      padding: 0 1.25rem;
-    }
-    .filter-panel.open {
-      max-height: 200px;
-      padding: 1.1rem 1.25rem;
-    }
-    .filter-panel .form-label {
-      font-size: 0.7rem;
-      font-family: var(--font-ibm-mono), monospace;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.3rem;
-      display: block;
-    }
-    .filter-panel .form-control,
-    .filter-panel .form-select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 2px;
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.82rem;
-      padding: 0.4rem 0.7rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .filter-panel .form-control:focus,
-    .filter-panel .form-select:focus {
-      background: var(--bg);
-      border-color: var(--accent);
-      color: var(--text);
-      box-shadow: 0 0 0 3px rgba(74,222,128,0.10);
-    }
-    .filter-panel .form-select option { background: var(--surface); }
-    /* checkbox */
-    .filter-panel .form-check-input {
-      background-color: var(--bg);
-      border-color: var(--border);
-      border-radius: 2px;
-    }
-    .filter-panel .form-check-input:checked {
-      background-color: var(--accent);
-      border-color: var(--accent);
-    }
-    .filter-panel .form-check-label {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-    /* switch */
-    .filter-panel .form-switch .form-check-input {
-      border-radius: 10px;
-    }
-    .filter-panel .form-switch .form-check-input:checked {
-      background-color: var(--accent);
-      border-color: var(--accent);
-    }
-    /* buttons row */
-    .filter-actions { display: flex; gap: 0.5rem; align-items: flex-end; padding-bottom: 0.1rem; }
-    .btn-filter-apply {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: var(--accent-dim);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 0.38rem 0.9rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-    .btn-filter-apply:hover { background: var(--accent); color: #0d0f14; }
-    .btn-filter-reset {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 0.38rem 0.9rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-      white-space: nowrap;
-    }
-    .btn-filter-reset:hover { border-color: var(--muted); color: var(--text); }
-    /* toggle button in header */
-    .btn-filter-toggle {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 0.32rem 0.8rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .btn-filter-toggle:hover,
-    .btn-filter-toggle.active { border-color: var(--accent); color: var(--accent); }
-    .btn-filter-toggle .arrow {
-      display: inline-block;
-      transition: transform 0.25s;
-      font-size: 0.65rem;
-    }
-    .btn-filter-toggle.active .arrow { transform: rotate(180deg); }
-    /* active filters badge */
-    .filter-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--accent);
-      color: #0d0f14;
-      font-size: 0.6rem;
-      font-weight: 700;
-      width: 15px; height: 15px;
-      border-radius: 50%;
-      margin-left: 0.1rem;
+      display:inline-block; width:8px; height:8px; border-radius:50%;
+      background:var(--bs-success); animation:pulse 2s infinite;
     }
 
-        /* ── DETAIL OFFCANVAS ── */
-    .detail-canvas .offcanvas-header {
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 1.25rem;
-      background: var(--surface);
+    /* table */
+    .table thead th {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
     }
-    .detail-canvas .offcanvas-title {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.9rem;
-      color: var(--accent);
-    }
-    .detail-canvas .offcanvas-body {
-      background: var(--surface);
-      padding: 0;
-      overflow-y: auto;
-    }
-    .detail-canvas {
-      background: var(--surface) !important;
-      border-left: 1px solid var(--border) !important;
-      width: 640px !important;
-    }
-    /* loading state inside detail body */
-    #detail-body.htmx-request { opacity: 0.4; transition: opacity 0.2s; }
- 
-    /* detail partial styles (shared via CSS vars already) */
-    .detail-section {
-      padding: 1.1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .detail-section:last-child { border-bottom: none; }
-    .detail-section-title {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent);
-      margin-bottom: 0.85rem;
-    }
-    .detail-field { margin-bottom: 0.75rem; }
-    .detail-field:last-child { margin-bottom: 0; }
-    .detail-label {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--light);
-      margin-bottom: 0.2rem;
-    }
-    .detail-value {
-      font-size: 0.88rem;
-      color: var(--text);
-    }
-    .detail-value.mono {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-    .detail-avatar {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      background: var(--accent-dim);
-      border: 2px solid var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 1.2rem;
-      color: var(--accent);
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
-    .detail-actions {
-      padding: 1rem 1.25rem;
-      display: flex;
-      gap: 0.5rem;
-      background: var(--surface2);
-      border-top: 1px solid var(--border);
-    }
-    .btn-detail-start {
-      flex: 1;
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: var(--accent-dim);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 0.45rem 1rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn-detail-start:hover { background: var(--accent); color: #0d0f14; }
-    .btn-detail-edit {
-      flex: 1;
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 0.45rem 1rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn-detail-edit:hover { background: var(--accent); color: #0d0f14; }
-    .btn-detail-delete {
-      flex: 1;
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: transparent;
-      border: 1px solid var(--red);
-      color: var(--red);
-      padding: 0.45rem 1rem;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .btn-detail-delete:hover { background: var(--red); border-color: var(--red); color: #0d0f14; }
+    .table td { font-size:.875rem; vertical-align:middle; }
+    .col-actions { width:1%; white-space:nowrap; }
 
- 
-    /* ── TOAST ── */
-    #toast-container {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    /* filter panel transition */
+    #filter-panel { transition:height .25s ease; }
+
+    /* HTMX loading overlay */
+    #table-container { position:relative; }
+    .htmx-overlay {
+      display:none; position:absolute; inset:0;
+      background:rgba(0,0,0,.35); z-index:10;
+      align-items:center; justify-content:center;
     }
-    .app-toast {
-      font-family: var(--font-ibm-mono), monospace;
-      font-size: 0.8rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      color: var(--text);
-      padding: 0.75rem 1rem;
-      border-radius: 2px;
-      animation: slideIn 0.2s ease;
-    }
-    @keyframes slideIn {
-      from { transform: translateX(20px); opacity: 0; }
-      to   { transform: translateX(0);   opacity: 1; }
-    }
+    .htmx-request .htmx-overlay { display:flex; }
+    #detail-body.htmx-request { opacity:.4; transition:opacity .2s; }
+
+    /* offcanvas width */
+    #detailCanvas { width:640px; }
+
+    /* VM status badges — keep semantic colors independent of BS theme */
+    .badge-running  { background:#1f4a2e; color:#4ade80; }
+    .badge-stopped  { background:#2d1f1f; color:#f87171; }
+    .badge-paused   { background:#2d2410; color:#fbbf24; }
+    .badge-shelved  { background:#2d2410; color:#fbbf24; }
+    .badge-unknown  { background:#b18424; color:#000; }
+
+    /* toast */
+    @keyframes slideIn { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
+    .app-toast { animation:slideIn .2s ease; }
   </style>
 </head>
 <body>
- 
-  <!-- NAVBAR -->
-  <nav class="app-nav">
-    <span class="brand">// VM ADMIN PANEL</span>
-    <div class="nav-right">
-      <div class="user-badge">
-        <span class="user-dot"></span>
-        {{.Username}}
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════════ -->
+<nav class="navbar navbar-expand px-4 border-bottom sticky-top bg-body-tertiary">
+  <span class="navbar-brand fw-semibold text-success font-monospace mb-0 me-auto">
+    // VM ADMIN PANEL
+  </span>
+
+  <div class="d-flex align-items-center gap-3">
+    <span class="font-monospace text-secondary small d-flex align-items-center gap-2">
+      <span class="user-dot"></span>{{.Username}}
+    </span>
+
+    <!-- dark / light toggle -->
+    <button id="theme-btn" class="btn btn-sm btn-outline-secondary border-0"
+      title="Toggle theme" onclick="toggleTheme()">
+      <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+    </button>
+
+    <button class="btn btn-sm btn-outline-danger font-monospace"
+      hx-post="/api/v1/logout" hx-target="body" hx-swap="none">
+      <i class="bi bi-box-arrow-right me-1"></i>Logout
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════════════════════════ -->
+<div class="container-fluid p-4">
+
+  <div class="mb-4">
+    <h5 class="font-monospace text-success mb-0">// Resource Management</h5>
+    <small class="text-secondary font-monospace">Developers virtual machines</small>
+  </div>
+
+  <!-- TABLE CARD -->
+  <div class="card border">
+
+    <!-- card header -->
+    <div class="card-header d-flex align-items-center justify-content-between py-2">
+      <span class="font-monospace text-secondary small text-uppercase">VM List</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary font-monospace"
+          id="filter-toggle-btn" type="button"
+          data-bs-toggle="collapse" data-bs-target="#filter-panel"
+          aria-expanded="false" aria-controls="filter-panel">
+          <i class="bi bi-funnel me-1"></i>Filters
+          <span class="badge bg-success ms-1 d-none" id="filter-badge">0</span>
+        </button>
       </div>
-      <button class="btn-logout"
-        hx-post="/api/v1/logout"
-        hx-target="body"
-        hx-swap="none">
-        Logout
-      </button>
     </div>
-  </nav>
- 
-  <!-- CONTENT -->
-  <div class="main-content">
-    <div class="page-header">
-      <div class="page-title">// Resource Management</div>
-      <div class="page-sub">Developers virtual machines</div>
-    </div>
- 
-    <div class="table-card">
-      <div class="table-card-header">
-        <span class="table-card-title">VM List</span>
-        <div style="display:flex;gap:0.5rem;align-items:center">
-          <button class="btn-filter-toggle" id="filter-toggle-btn" onclick="toggleFilters()">
-            ⚙ Filters <span class="arrow">▼</span>
-            <span class="filter-badge" id="filter-badge" style="display:none">0</span>
-          </button>
-        </div>
-      </div>
- 
-      <!-- FILTER PANEL -->
-      <div class="filter-panel" id="filter-panel">
+
+    <!-- FILTER PANEL (Bootstrap collapse) -->
+    <div class="collapse border-bottom" id="filter-panel">
+      <div class="card-body bg-body-secondary py-3">
         <div class="row g-3 align-items-end">
- 
-          <!-- TEXT INPUT: ricerca per nome o id -->
+
           <div class="col-md-2">
-            <label class="form-label" for="f-name">Name</label>
-            <input type="text" class="form-control" id="f-name" placeholder="Search by name…"/>
+            <label class="form-label small font-monospace text-secondary text-uppercase mb-1" for="f-name">Name</label>
+            <input type="text" class="form-control form-control-sm font-monospace" id="f-name" placeholder="Search by name…"/>
           </div>
-          
-          <!-- TEXT INPUT: ricerca per owner -->
+
           <div class="col-md-1">
-            <label class="form-label" for="f-owner">Owner</label>
-            <input type="text" class="form-control" id="f-owner" placeholder="Search by owner…"/>
+            <label class="form-label small font-monospace text-secondary text-uppercase mb-1" for="f-owner">Owner</label>
+            <input type="text" class="form-control form-control-sm font-monospace" id="f-owner" placeholder="Owner…"/>
           </div>
-          
-          <!-- TEXT INPUT: ricerca per userid -->
+
           <div class="col-md-3">
-            <label class="form-label" for="f-userid">UserId</label>
-            <input type="text" class="form-control" id="f-userid" placeholder="Search by userId"/>
+            <label class="form-label small font-monospace text-secondary text-uppercase mb-1" for="f-userid">User ID</label>
+            <input type="text" class="form-control form-control-sm font-monospace" id="f-userid" placeholder="Search by userId"/>
           </div>
- 
-          <!-- TEXT INPUT: ricerca per image -->
+
           <div class="col-md-3">
-            <label class="form-label" for="f-image">Image</label>
-            <input type="text" class="form-control" id="f-image" placeholder="Search by image"/>
+            <label class="form-label small font-monospace text-secondary text-uppercase mb-1" for="f-image">Image</label>
+            <input type="text" class="form-control form-control-sm font-monospace" id="f-image" placeholder="Search by image"/>
           </div>
- 
-          <!-- DROPDOWN: status -->
+
           <div class="col-md-2">
-            <label class="form-label" for="f-status">Status</label>
-            <select class="form-select" id="f-status">
+            <label class="form-label small font-monospace text-secondary text-uppercase mb-1" for="f-status">Status</label>
+            <select class="form-select form-select-sm font-monospace" id="f-status">
               <option value="">All</option>
               {{ range $state := vmStates }}
                 <option value="{{$state}}">{{$state}}</option>
               {{end}}
             </select>
           </div>
- 
-          <!-- ACTIONS -->
-          <div class="col-md-1 filter-actions">
-            <button class="btn-filter-apply" onclick="applyFilters()">Apply</button>
-            <button class="btn-filter-reset" onclick="resetFilters()">Reset</button>
+
+          <div class="col-md-1 d-flex gap-2 align-items-end">
+            <button class="btn btn-sm btn-success font-monospace" onclick="applyFilters()">
+              <i class="bi bi-search"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary font-monospace" onclick="resetFilters()">
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
- 
-        </div>
-      </div>
- 
-      <div id="table-container">
-        <div class="htmx-indicator-overlay">loading...</div>
-        <div
-          hx-get="/api/v1/vm?page=1"
-          hx-trigger="load"
-          hx-target="#table-container"
-          hx-swap="innerHTML"
-          hx-indicator="#table-container"
-        ></div>
-      </div>
-    </div>
-  </div>
- 
-  <!-- MODAL CONFERMA -->
-  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="confirmModalLabel">Conferma Operazione</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
-        </div>
-        <div class="modal-body">
-          <div id="modal-message">Sei sicuro di voler procedere?</div>
-          <div class="item-detail" id="modal-detail"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" data-bs-dismiss="modal">Annulla</button>
-          <button type="button" class="btn-confirm" id="modal-confirm-btn">Conferma</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- DETAIL OFFCANVAS -->
-  <div class="offcanvas offcanvas-end detail-canvas" tabindex="-1" id="detailCanvas" aria-labelledby="detailCanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="detailCanvasLabel">// Virtual machine details</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body d-flex flex-column" style="padding:0">
-      <div id="detail-body" style="flex:1;overflow-y:auto">
-        <div class="detail-section" style="color:var(--muted);font-family:var(--font-ibm-mono),monospace;font-size:0.8rem">
-          Select a vm from the table.
         </div>
+      </div>
+    </div>
+
+    <!-- TABLE CONTAINER (HTMX target) -->
+    <div id="table-container">
+      <div class="htmx-overlay"><div class="spinner-border text-success" role="status"></div></div>
+      <div
+        hx-get="/api/v1/vm?page=1"
+        hx-trigger="load"
+        hx-target="#table-container"
+        hx-swap="innerHTML"
+        hx-indicator="#table-container"
+      ></div>
+    </div>
+
+  </div><!-- /card -->
+</div><!-- /container -->
+
+<!-- ═══ MODAL CONFERMA ════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title font-monospace text-success" id="confirmModalLabel">Confirm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1" id="modal-message">Confirm operation?</p>
+        <small class="text-secondary font-monospace" id="modal-detail"></small>
+      </div>
+      <div class="modal-footer border-top gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm btn-danger font-monospace" id="modal-confirm-btn">Confirm</button>
       </div>
     </div>
   </div>
+</div>
 
- 
-  <!-- TOAST CONTAINER -->
-  <div id="toast-container"></div>
- 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-  <script>
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    const detailCanvas = new bootstrap.Offcanvas(document.getElementById('detailCanvas'));
-    let pendingAction = null;
- 
-    // Open confirm modal from table rows
-    function openConfirm(action, id, name, page) {
-      const messages = {
-        stop: `Stop the selected resource?`,
-        start: `Start the selected resource?`,
-        restart: `Restart the selected resource?`,
-        pause: `Pause the selected resource?`,
-        unpause: `Resume the selected resource?`,
-        shelve: `Shelve the selected resource?`,
-        unshelve: `Unshelve the selected resource?`
-      };
-      document.getElementById('modal-message').textContent = messages[action] || 'Confirm operation?';
-      document.getElementById('modal-detail').textContent  = `ID: ${id}  |  Nome: ${name}`;
-      
-      switch (action) {
-      case "stop":
-        document.getElementById('confirmModalLabel').textContent = '// Stop VM';
-        console.log(action);
-        break;
-      case "start":
-        document.getElementById('confirmModalLabel').textContent = '// Start VM';
-        console.log(action);
-        console.log(page)
-        break;
-      case "shelve":
-        document.getElementById('confirmModalLabel').textContent = '// Shelve VM';
-        console.log(action);
-        break;
-      case "reboot":
-        document.getElementById('confirmModalLabel').textContent = '// Reboot VM';
-        console.log(action);
-        break;
-      case "unshelve":
-        document.getElementById('confirmModalLabel').textContent = '// Unshelve VM';
-        console.log(action);
-        break;
-      default:
-        console.log(`Sorry, action ${action} unkwnown.`);
-      }
-      pendingAction = { action, id, name, page};
-      confirmModal.show();
-    }
- 
-    document.getElementById('modal-confirm-btn').addEventListener('click', function() {
-      if (!pendingAction) return;
-      confirmModal.hide();
-      htmx.ajax('POST', `/api/v1/vm/${pendingAction.id}/${pendingAction.action}?page=${pendingAction.page}`, {
-        target: '#table-container',
-        swap: 'innerHTML'
-      });
-      showToast(`Operation executed on: ${pendingAction.name}`);
-      pendingAction = null;
-    });
- 
-    // Logout redirect
-    document.body.addEventListener('htmx:afterRequest', function(evt) {
-      if (evt.detail.pathInfo.requestPath === '/api/v1/logout') {
-        window.location.href = '/';
-      }
-    });
- 
-    function showToast(msg) {
-      const t = document.createElement('div');
-      t.className = 'app-toast';
-      t.textContent = '✓ ' + msg;
-      document.getElementById('toast-container').appendChild(t);
-      setTimeout(() => t.remove(), 3500);
-    }
+<!-- ═══ DETAIL OFFCANVAS ══════════════════════════════════════════════════════ -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="detailCanvas">
+  <div class="offcanvas-header border-bottom">
+    <h5 class="offcanvas-title font-monospace text-success">// Virtual Machine Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body p-0 d-flex flex-column">
+    <div id="detail-body" style="flex:1;overflow-y:auto">
+      <div class="p-3 text-secondary font-monospace small">
+        Select a VM from the table.
+      </div>
+    </div>
+  </div>
+</div>
 
-        // ── FILTER PANEL ──────────────────────────────────────────────────────────
-    function toggleFilters() {
-      const panel = document.getElementById('filter-panel');
-      const btn   = document.getElementById('filter-toggle-btn');
-      const open  = panel.classList.toggle('open');
-      btn.classList.toggle('active', open);
-    }
- 
-    function getFilterParams() {
-      return new URLSearchParams({
-        page:     1,
-        name:     document.getElementById('f-name').value.trim(),
-        owner:    document.getElementById('f-owner').value.trim(),
-        userid:   document.getElementById('f-userid').value.trim(),
-        image:    document.getElementById('f-image').value.trim(),
-        status:   document.getElementById('f-status').value,
-        // active:   document.getElementById('f-active').checked   ? '1' : '',
-        // inactive: document.getElementById('f-inactive').checked ? '1' : '',
-      }).toString();
-    }
- 
-    function applyFilters() {
-      updateFilterBadge();
-      htmx.ajax('GET', `/api/v1/vm?${getFilterParams()}`, {
-        target: '#table-container',
-        swap:   'innerHTML',
-      });
-    }
- 
-    function resetFilters() {
-      document.getElementById('f-name').value       = '';
-      document.getElementById('f-owner').value      = '';
-      document.getElementById('f-userid').value     = '';
-      document.getElementById('f-image').value      = '';
-      document.getElementById('f-status').value     = '';
-      // document.getElementById('f-active').checked   = false;
-      // document.getElementById('f-inactive').checked = false;
-      updateFilterBadge();
-      htmx.ajax('GET', '/api/v1/vm?page=1', {
-        target: '#table-container',
-        swap:   'innerHTML',
-      });
-    }
- 
-    function updateFilterBadge() {
-      let count = 0;
-      if (document.getElementById('f-name').value.trim())       count++;
-      if (document.getElementById('f-owner').value.trim())      count++;
-      if (document.getElementById('f-userid').value.trim())     count++;
-      if (document.getElementById('f-image').value.trim())      count++;
-      if (document.getElementById('f-status').value)            count++;
-      // if (document.getElementById('f-active').checked)          count++;
-      // if (document.getElementById('f-inactive').checked)        count++;
-      const badge = document.getElementById('filter-badge');
-      badge.style.display = count > 0 ? 'inline-flex' : 'none';
-      badge.textContent   = count;
-    }
- 
-    // Live badge update on input change
-    ['f-name','f-owner','f-userid','f-image','f-status'].forEach(id => {
-      document.getElementById(id).addEventListener('change', updateFilterBadge);
-    });
-    document.getElementById('f-name').addEventListener('input', updateFilterBadge);
-    document.getElementById('f-owner').addEventListener('input', updateFilterBadge);
-    document.getElementById('f-userid').addEventListener('input', updateFilterBadge);
-    document.getElementById('f-image').addEventListener('input', updateFilterBadge);
+<!-- ═══ TOAST CONTAINER ═══════════════════════════════════════════════════════ -->
+<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index:9999"></div>
 
-  </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<script>
+  /* ── THEME ──────────────────────────────────────────────────────────────── */
+  const root = document.documentElement;
+  const themeIcon = document.getElementById('theme-icon');
+
+  function applyTheme(dark) {
+    root.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+    themeIcon.className = dark ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }
+  function toggleTheme() {
+    applyTheme(root.getAttribute('data-bs-theme') !== 'dark');
+  }
+  applyTheme((localStorage.getItem('theme') ?? 'dark') === 'dark');
+
+  /* ── BOOTSTRAP INSTANCES ─────────────────────────────────────────────────── */
+  const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+  const detailCanvas = new bootstrap.Offcanvas(document.getElementById('detailCanvas'));
+  let pendingAction = null;
+
+  /* ── CONFIRM MODAL ───────────────────────────────────────────────────────── */
+  function openConfirm(action, id, name, page) {
+    const messages = {
+      stop:     'Stop the selected VM?',
+      start:    'Start the selected VM?',
+      restart:  'Restart the selected VM?',
+      pause:    'Pause the selected VM?',
+      unpause:  'Resume the selected VM?',
+      shelve:   'Shelve the selected VM?',
+      unshelve: 'Unshelve the selected VM?',
+      reboot:   'Reboot the selected VM?',
+    };
+    const labels = {
+      stop:     '// Stop VM',
+      start:    '// Start VM',
+      restart:  '// Restart VM',
+      pause:    '// Pause VM',
+      unpause:  '// Resume VM',
+      shelve:   '// Shelve VM',
+      unshelve: '// Unshelve VM',
+      reboot:   '// Reboot VM',
+    };
+    const dangerOps = ['stop', 'shelve', 'reboot'];
+
+    document.getElementById('modal-message').textContent    = messages[action] ?? 'Confirm operation?';
+    document.getElementById('modal-detail').textContent     = `ID: ${id}  |  ${name}`;
+    document.getElementById('confirmModalLabel').textContent = labels[action] ?? '// Confirm';
+
+    const btn = document.getElementById('modal-confirm-btn');
+    btn.className = dangerOps.includes(action)
+      ? 'btn btn-sm btn-danger font-monospace'
+      : 'btn btn-sm btn-success font-monospace';
+
+    pendingAction = { action, id, name, page };
+    confirmModal.show();
+  }
+
+  document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+    if (!pendingAction) return;
+    confirmModal.hide();
+    htmx.ajax('POST', `/api/v1/vm/${pendingAction.id}/${pendingAction.action}?page=${pendingAction.page}`, {
+      target: '#table-container',
+      swap:   'innerHTML',
+    });
+    showToast(`Operation "${pendingAction.action}" executed on: ${pendingAction.name}`);
+    pendingAction = null;
+  });
+
+  /* ── LOGOUT ──────────────────────────────────────────────────────────────── */
+  document.body.addEventListener('htmx:afterRequest', evt => {
+    if (evt.detail.pathInfo.requestPath === '/api/v1/logout') window.location.href = '/';
+  });
+
+  /* ── TOAST ───────────────────────────────────────────────────────────────── */
+  function showToast(msg) {
+    const el = document.createElement('div');
+    el.className = 'toast show align-items-center text-bg-success border-0 app-toast mb-2';
+    el.innerHTML = `<div class="d-flex"><div class="toast-body font-monospace small">✓ ${msg}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button></div>`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  /* ── FILTERS ─────────────────────────────────────────────────────────────── */
+  function getFilterParams() {
+    return new URLSearchParams({
+      page:   1,
+      name:   document.getElementById('f-name').value.trim(),
+      owner:  document.getElementById('f-owner').value.trim(),
+      userid: document.getElementById('f-userid').value.trim(),
+      image:  document.getElementById('f-image').value.trim(),
+      status: document.getElementById('f-status').value,
+    }).toString();
+  }
+
+  function applyFilters() {
+    updateFilterBadge();
+    htmx.ajax('GET', `/api/v1/vm?${getFilterParams()}`, { target:'#table-container', swap:'innerHTML' });
+  }
+
+  function resetFilters() {
+    ['f-name','f-owner','f-userid','f-image'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-status').value = '';
+    updateFilterBadge();
+    htmx.ajax('GET', '/api/v1/vm?page=1', { target:'#table-container', swap:'innerHTML' });
+  }
+
+  function updateFilterBadge() {
+    const vals = ['f-name','f-owner','f-userid','f-image','f-status']
+      .map(id => document.getElementById(id).value.trim())
+      .filter(Boolean).length;
+    const b = document.getElementById('filter-badge');
+    b.classList.toggle('d-none', vals === 0);
+    b.textContent = vals;
+  }
+
+  ['f-name','f-owner','f-userid','f-image','f-status'].forEach(id =>
+    document.getElementById(id).addEventListener('change', updateFilterBadge));
+  ['f-name','f-owner','f-userid','f-image'].forEach(id =>
+    document.getElementById(id).addEventListener('input', updateFilterBadge));
+</script>
 </body>
 </html>

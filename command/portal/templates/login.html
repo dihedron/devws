@@ -1,170 +1,90 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" data-bs-theme="dark">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>// DEVWS Login</title>
+    <script>
+    document.documentElement.setAttribute(
+      'data-bs-theme',
+      localStorage.getItem('theme') ?? 'dark'
+    );
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
   <style>
-    :root {
-      --bg:        #0d0f14;
-      --surface:   #161a22;
-      --border:    #2a2f3d;
-      --accent:    #4ade80;
-      --accent-dim:#1f4a2e;
-      --text:      #e2e8f0;
-      --muted:     #64748b;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'IBM Plex Sans', sans-serif;
-      color: var(--text);
-    }
-    .login-card {
-      width: 100%;
-      max-width: 400px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2.5rem;
-      position: relative;
-    }
-    .login-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--accent);
-      border-radius: 4px 4px 0 0;
-    }
-    .brand {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 1.1rem;
-      color: var(--accent);
-      letter-spacing: 0.05em;
-      margin-bottom: 0.25rem;
-    }
-    .subtitle {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-bottom: 2rem;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-    .form-label {
-      font-size: 0.75rem;
-      font-family: 'IBM Plex Mono', monospace;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.4rem;
-    }
-    .form-control {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 2px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.9rem;
-      padding: 0.6rem 0.85rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-control:focus {
-      background: var(--bg);
-      border-color: var(--accent);
-      color: var(--text);
-      box-shadow: 0 0 0 3px rgba(74,222,128,0.12);
-    }
-    .btn-login {
-      width: 100%;
-      background: var(--accent);
-      color: #0d0f14;
-      border: none;
-      border-radius: 2px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-weight: 600;
-      font-size: 0.85rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.7rem;
-      margin-top: 0.5rem;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-    }
-    .btn-login:hover { opacity: 0.88; }
-    .btn-login:active { transform: scale(0.98); }
-    .btn-login[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .htmx-indicator {
-      display: none;
-    }
-    .htmx-request .htmx-indicator { display: inline; }
-    .htmx-request.btn-login { opacity: 0.6; }
-    #login-error {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.8rem;
-    }
+    body { min-height:100vh; display:flex; align-items:center; justify-content:center; }
+    .login-card { width:100%; max-width:400px; }
+    .brand-bar { height:3px; background:var(--bs-success); border-radius:4px 4px 0 0; }
+    @keyframes slideIn { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
+    .app-toast { animation:slideIn .2s ease; }
   </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="brand">// VM ADMIN PANEL</div>
-    <div class="subtitle">Domain credentials authentication</div>
- 
-    <div id="login-error"></div>
- 
-    <form
-      hx-post="/api/v1/auth/login"
-      hx-target="#login-error"
-      hx-swap="innerHTML"
-      hx-indicator=".btn-login"
-    >
-      <div class="mb-3">
-        <label class="form-label" for="username">Username</label>
-        <input
-          type="text"
-          class="form-control"
-          id="username"
-          name="username"
-          autocomplete="username"
-          required
-          placeholder="admin"
-        />
-      </div>
-      <div class="mb-4">
-        <label class="form-label" for="password">Password</label>
-        <input
-          type="password"
-          class="form-control"
-          id="password"
-          name="password"
-          autocomplete="current-password"
-          required
-          placeholder="••••••••"
-        />
-      </div>
-      <button type="submit" class="btn-login">
-        <span class="htmx-indicator">...</span>
-        <span>Login</span>
-      </button>
-    </form>
+
+  <!-- theme toggle top-right -->
+  <div class="position-fixed top-0 end-0 p-3">
+    <button id="theme-btn" class="btn btn-sm btn-outline-secondary border-0" onclick="toggleTheme()" title="Tema">
+      <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+    </button>
   </div>
- 
+
+  <div class="login-card">
+    <div class="brand-bar"></div>
+    <div class="card rounded-0 rounded-bottom border-top-0">
+      <div class="card-body p-4">
+
+        <div class="font-monospace text-success mb-1">// VM ADMIN PANEL</div>
+        <div class="font-monospace text-secondary small mb-4">Domain credentials authentication</div>
+
+        <div id="login-error"></div>
+
+        <form hx-post="/api/v1/auth/login" hx-target="#login-error" hx-swap="innerHTML">
+          <div class="mb-3">
+            <label class="form-label small font-monospace text-secondary text-uppercase" for="username">Username</label>
+            <input type="text" class="form-control font-monospace" id="username" name="username"
+              autocomplete="username" required placeholder="admin"/>
+          </div>
+          <div class="mb-4">
+            <label class="form-label small font-monospace text-secondary text-uppercase" for="password">Password</label>
+            <input type="password" class="form-control font-monospace" id="password" name="password"
+              autocomplete="current-password" required placeholder="••••••••"/>
+          </div>
+          <button type="submit" class="btn btn-success w-100 font-monospace">
+            <span class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+            Login
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script>
+    const root = document.documentElement;
+    const icon = document.getElementById('theme-icon');
+
+    function applyTheme(dark) {
+      root.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+      icon.className = dark ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    }
+    function toggleTheme() { applyTheme(root.getAttribute('data-bs-theme') !== 'dark'); }
+    applyTheme((localStorage.getItem('theme') ?? 'dark') === 'dark');
+
     document.body.addEventListener('htmx:beforeSwap', function(evt) {
     if (evt.detail.xhr.status === 401) {
       evt.detail.shouldSwap = true;  // allow the swap
       evt.detail.isError = false;    // don't treat as error
     }
   });
-    document.body.addEventListener('htmx:afterRequest', function(evt) {
-      if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.requestPath === '/login') {
-        // redirect handled server-side via HX-Redirect header
+
+    document.body.addEventListener('htmx:afterRequest', evt => {
+      if (evt.detail.pathInfo.requestPath === '/login' && evt.detail.xhr.status === 200) {
+        const redirect = evt.detail.xhr.getResponseHeader('HX-Redirect');
+        if (redirect) window.location.href = redirect;
       }
     });
   </script>

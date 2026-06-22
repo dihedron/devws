@@ -23,7 +23,7 @@ func NewTableData(vms []openstack.Workstation, page int) *TableData {
 
 }
 
-const pageSize = 10
+const pageSize = 15
 
 func (t *TableData) Paginate(vms []openstack.Workstation, page int) *TableData {
 	total := len(vms)
